@@ -242,64 +242,126 @@
             margin-bottom: 50px;
         }
 
-        .badge {
+        /* Version Badge - Small top indicator */
+        .version-badge {
             display: inline-block;
             background: var(--black);
             color: var(--white);
-            padding: 8px 20px;
+            padding: 6px 16px;
             font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
-            margin-bottom: 25px;
-            transform: rotate(-2deg);
-        }
-
-        h1 {
-            font-size: clamp(2.5rem, 10vw, 4rem);
-            font-weight: 700;
-            line-height: 1.1;
             margin-bottom: 20px;
-        }
-
-        h1 .highlight {
-            background: var(--accent);
-            padding: 0 10px;
-            display: inline-block;
             transform: rotate(-1deg);
             border: var(--border);
-            box-shadow: var(--shadow-sm);
+            box-shadow: 3px 3px 0 var(--black);
         }
 
+        /* Main Title - Dominant visual element */
+        .main-title {
+            font-size: clamp(2.2rem, 12vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+        }
+
+        .title-brand {
+            color: var(--black);
+            display: inline-block;
+        }
+
+        .title-divider {
+            color: var(--primary);
+            margin: 0 4px;
+        }
+
+        .title-desc {
+            color: var(--primary);
+            display: inline-block;
+            position: relative;
+        }
+
+        .title-desc::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: var(--accent);
+            opacity: 0.6;
+            z-index: -1;
+            transform: rotate(-1deg);
+        }
+
+        /* Subtitle - Supporting text */
         .subtitle {
-            font-size: 1.1rem;
-            color: #666;
-            max-width: 450px;
-            margin: 0 auto;
+            font-size: 1.15rem;
+            color: #555;
+            max-width: 380px;
+            margin: 0 auto 32px;
             line-height: 1.6;
+            font-weight: 400;
         }
 
-        .features-header {
+        .subtitle-line {
+            display: inline-block;
+            animation: fadeInUp 0.6s ease-out 0.3s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Features Pills - Secondary info with visual weight */
+        .features-pills {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin-top: 30px;
+            gap: 12px;
             flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
         }
 
-        .feature-inline {
-            display: flex;
+        .feature-pill {
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
             font-weight: 600;
+            border: 2px solid var(--black);
+            box-shadow: 3px 3px 0 var(--black);
+            transition: all 0.15s ease;
         }
 
-        .feature-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 2px solid var(--black);
+        .feature-pill:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0 var(--black);
+        }
+
+        .pill-icon {
+            font-size: 1rem;
+        }
+
+        .pill-primary {
+            background: var(--accent);
+        }
+
+        .pill-secondary {
+            background: var(--secondary);
+        }
+
+        .pill-accent {
+            background: var(--purple);
         }
 
         /* OS Detection Card */
@@ -749,30 +811,35 @@
                 </div>
             </div>
 
-            <div class="badge">OpenClaw飞书版一键安装助手</div>
-            <h1>
-                安装只需
-                <span class="highlight">一步</span>
+            <!-- Version Badge -->
+            <div class="version-badge">飞书版</div>
+
+            <!-- Main Title -->
+            <h1 class="main-title">
+                <span class="title-brand">OpenClaw</span>
+                <span class="title-divider">·</span>
+                <span class="title-desc">一键安装</span>
             </h1>
+
+            <!-- Subtitle with staggered animation -->
             <p class="subtitle">
-                复制下方命令，粘贴运行。<br>
-                剩下的事情，交给我们。
+                <span class="subtitle-line">无需配置环境，一条命令搞定</span>
             </p>
 
-            <!-- Features moved here -->
-            <div class="features-header">
-                <div class="feature-inline">
-                    <span class="feature-dot" style="background: var(--accent);"></span>
-                    <span>全自动安装</span>
-                </div>
-                <div class="feature-inline">
-                    <span class="feature-dot" style="background: var(--secondary);"></span>
-                    <span>无需翻墙</span>
-                </div>
-                <div class="feature-inline">
-                    <span class="feature-dot" style="background: var(--purple);"></span>
-                    <span>集成飞书插件</span>
-                </div>
+            <!-- Features Pills -->
+            <div class="features-pills">
+                <span class="feature-pill pill-primary">
+                    <span class="pill-icon">⚡</span>
+                    全自动安装
+                </span>
+                <span class="feature-pill pill-secondary">
+                    <span class="pill-icon">🌍</span>
+                    国内可用
+                </span>
+                <span class="feature-pill pill-accent">
+                    <span class="pill-icon">🔌</span>
+                    飞书插件
+                </span>
             </div>
         </header>
 
