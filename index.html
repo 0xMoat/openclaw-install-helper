@@ -115,11 +115,6 @@
             75% { transform: translateY(-10px) rotate(0deg); }
         }
 
-        @keyframes plane-glide {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(3deg); }
-        }
-
         @keyframes lobster-blink {
             0%, 90%, 100% { opacity: 1; }
             95% { opacity: 0.3; }
@@ -676,58 +671,16 @@
                         </linearGradient>
                     </defs>
 
-                    <!-- Feishu Paper Plane Logo - Authentic Design -->
-                    <g class="paper-plane" transform="translate(5, 15)">
-                        <!-- Bottom/Back shape - Primary Blue #3370FF (Feishu brand color) -->
-                        <!-- Large curved wing shape forming the base -->
-                        <path d="M15 45
-                                 L15 115
-                                 C15 125 35 135 55 138
-                                 C75 141 100 135 120 128
-                                 C140 120 155 105 155 90
-                                 L155 35
-                                 C155 25 135 18 115 18
-                                 C95 18 70 22 50 28
-                                 C30 34 15 40 15 45Z"
-                              fill="#3370FF"/>
-
-                        <!-- Middle shape - Darker Blue #165DFF -->
-                        <!-- Mid-layer curved shape, sits on top, adds depth -->
-                        <path d="M55 20
-                                 C70 25 95 30 120 35
-                                 C135 40 148 50 152 65
-                                 C148 90 130 110 110 122
-                                 C90 130 70 132 55 132
-                                 C60 110 70 70 75 35
-                                 C72 28 68 22 55 20Z"
-                              fill="#165DFF"/>
-
-                        <!-- Top shape - Light Teal/Cyan #00D6B9 -->
-                        <!-- Small accent at top-left wing tip -->
-                        <path d="M35 8
-                                 C50 12 75 18 95 22
-                                 L75 18
-                                 C60 15 45 12 35 8Z"
-                              fill="#00D6B9"/>
-
-                        <!-- Motion lines (flying effect) -->
-                        <g opacity="0.25">
-                            <path d="M5 145 L-15 170" stroke="#3370FF" stroke-width="2.5" stroke-linecap="round"/>
-                            <path d="M50 155 L40 180" stroke="#3370FF" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M155 145 L175 165" stroke="#3370FF" stroke-width="2" stroke-linecap="round"/>
-                        </g>
-                    </g>
-
-                    <!-- Lobster sitting on plane -->
-                    <g transform="translate(10, -5)">
+                    <!-- Lobster Mascot -->
+                    <g transform="translate(15, 30)">
                         <!-- Body -->
                         <path class="claw-body" d="M85 18 C60 18 48 35 48 45 C48 60 62 70 70 72 L70 82 L76 82 L76 72 C76 72 82 75 88 72 L88 82 L88 72 C105 70 122 60 122 45 C122 30 110 18 85 18Z"/>
 
-                        <!-- Left Claw holding plane -->
-                        <path class="claw-left" d="M38 38 C28 35 22 42 28 52 C34 58 42 54 48 48 C52 44 44 40 38 38Z"/>
+                        <!-- Left Claw -->
+                        <path class="claw-left" d="M35 50 C25 48 18 55 22 65 C28 72 38 68 42 60 C45 55 40 52 35 50Z"/>
 
-                        <!-- Right Claw holding plane -->
-                        <path class="claw-right" d="M132 38 C142 35 148 42 144 52 C140 58 130 54 122 48 C120 44 128 40 132 38Z"/>
+                        <!-- Right Claw -->
+                        <path class="claw-right" d="M135 50 C145 48 152 55 148 65 C142 72 132 68 128 60 C125 55 130 52 135 50Z"/>
 
                         <!-- Left Eye -->
                         <g class="eye">
