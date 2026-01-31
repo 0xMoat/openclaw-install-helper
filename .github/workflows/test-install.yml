@@ -33,6 +33,25 @@ jobs:
       - name: Verify installation
         run: |
           echo "=== Verification ==="
+
+          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
+          if [[ -f "/opt/homebrew/bin/brew" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          elif [[ -f "/usr/local/bin/brew" ]]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+          fi
+
+          # pnpm 路径
+          export PNPM_HOME="$HOME/Library/pnpm"
+          if [[ -d "$PNPM_HOME" ]]; then
+            export PATH="$PNPM_HOME:$PATH"
+          fi
+
+          # npm 全局路径
+          if [[ -d "$HOME/.npm-global/bin" ]]; then
+            export PATH="$HOME/.npm-global/bin:$PATH"
+          fi
+
           echo "Node: $(node --version)"
           echo "pnpm: $(pnpm --version)"
           echo "Git: $(git --version)"
@@ -67,12 +86,25 @@ jobs:
       - name: Verify installation
         shell: pwsh
         run: |
+          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+          # 添加 pnpm 路径
+          $pnpmHome = "$env:LOCALAPPDATA\pnpm"
+          if (Test-Path $pnpmHome) {
+            $env:Path = "$pnpmHome;$env:Path"
+          }
+
+          # 添加 npm 全局路径
+          $npmPath = "$env:APPDATA\npm"
+          if (Test-Path $npmPath) {
+            $env:Path = "$npmPath;$env:Path"
+          }
+
           Write-Host "=== Verification ==="
           Write-Host "Node: $(node --version)"
           Write-Host "pnpm: $(pnpm --version)"
           Write-Host "Git: $(git --version)"
-
-          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
           Write-Host "OpenClaw: $(try { openclaw --version } catch { 'checking...' })"
 
   # 测试完全干净的 Windows 环境（无 Git、无 Node）
@@ -91,7 +123,7 @@ jobs:
           Write-Host "=== Removing Git and winget to simulate clean Windows ==="
 
           # 尝试用 winget 卸载 Git（在移除 winget 之前先利用它卸载 Git）
-          winget uninstall --id Git.Git --silent 2>$null
+          winget uninstall --id Git.Git --silent --accept-package-agreements --accept-source-agreements 2>$null
 
           # 也尝试用 choco 卸载（如果存在）
           if (Get-Command choco -ErrorAction SilentlyContinue) {
@@ -125,7 +157,7 @@ jobs:
           # 同样处理 AppInstallerDL.exe 和相关组件
           Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "*AppInstaller*" -ErrorAction SilentlyContinue | ForEach-Object {
             $backupPath = "$($_.FullName).bak"
-            if (Test-Path $_.FullName -and $_.Extension -in @('.exe', '.dll')) {
+            if ((Test-Path $_.FullName) -and ($_.Extension -in @('.exe', '.dll'))) {
               Move-Item -Path $_.FullName -Destination $backupPath -Force
               Write-Host "Disabled: $($_.FullName)"
             }
@@ -163,8 +195,20 @@ jobs:
         run: |
           Write-Host "=== Verification ==="
 
-          # 刷新 PATH
+          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+          # 添加 pnpm 路径
+          $pnpmHome = "$env:LOCALAPPDATA\pnpm"
+          if (Test-Path $pnpmHome) {
+            $env:Path = "$pnpmHome;$env:Path"
+          }
+
+          # 添加 npm 全局路径
+          $npmPath = "$env:APPDATA\npm"
+          if (Test-Path $npmPath) {
+            $env:Path = "$npmPath;$env:Path"
+          }
 
           Write-Host "Git: $(git --version)"
           Write-Host "Node: $(node --version)"
