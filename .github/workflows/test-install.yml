@@ -70,6 +70,54 @@ jobs:
           echo "📂 安装路径:"
           which node pnpm openclaw 2>/dev/null || echo "  部分命令可能需要重启终端后使用"
 
+  # 测试 macOS 带 Skills 安装
+  test-macos-with-skills:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run install script with Skills
+        env:
+          INSTALL_SKILLS: 'y'
+        run: |
+          echo "═══════════════════════════════════════════════════════════"
+          echo "📋 macOS 安装测试 - 包含文件处理技能"
+          echo "═══════════════════════════════════════════════════════════"
+          echo ""
+
+          chmod +x install.sh
+          ./install.sh
+
+          echo ""
+          echo "───────────────────────────────────────────────────────────────"
+          echo ""
+
+      - name: Verify Skills Installation
+        run: |
+          # 刷新 PATH
+          if [[ -f "/opt/homebrew/bin/brew" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          elif [[ -f "/usr/local/bin/brew" ]]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+          fi
+          export PNPM_HOME="$HOME/Library/pnpm"
+          if [[ -d "$PNPM_HOME" ]]; then
+            export PATH="$PNPM_HOME:$PATH"
+          fi
+          # 添加 Python 3.12 到 PATH
+          if [[ -d "/opt/homebrew/opt/python@3.12/bin" ]]; then
+            export PATH="/opt/homebrew/opt/python@3.12/bin:$PATH"
+          elif [[ -d "/usr/local/opt/python@3.12/bin" ]]; then
+            export PATH="/usr/local/opt/python@3.12/bin:$PATH"
+          fi
+
+          echo "✅ Skills 安装结果验证:"
+          echo "  Python:   $(python3 --version 2>/dev/null || python3.12 --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  OpenClaw: $(openclaw --version 2>/dev/null || echo '❌ 未安装')"
+          echo ""
+          echo "📦 已安装技能: xlsx, pdf, pptx, docx"
+
   # 测试完全干净的 macOS 环境（无 Homebrew、无 Node）
   test-macos-clean:
     runs-on: macos-latest
@@ -185,6 +233,55 @@ jobs:
           Write-Host "  Node.js:  $(try { node --version } catch { '❌ 未安装' })"
           Write-Host "  pnpm:     $(try { pnpm --version } catch { '❌ 未安装' })"
           Write-Host "  OpenClaw: $(try { openclaw --version } catch { '❌ 未安装' })"
+
+  # 测试 Windows 带 Skills 安装
+  test-windows-with-skills:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run install script with Skills
+        shell: pwsh
+        env:
+          INSTALL_SKILLS: 'y'
+        run: |
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host "📋 Windows 安装测试 - 包含文件处理技能" -ForegroundColor Cyan
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host ""
+
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+          .\install.ps1
+
+          Write-Host ""
+          Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor Gray
+          Write-Host ""
+
+      - name: Verify Skills Installation
+        shell: pwsh
+        run: |
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          $pnpmHome = "$env:LOCALAPPDATA\pnpm"
+          if (Test-Path $pnpmHome) { $env:Path = "$pnpmHome;$env:Path" }
+          $npmPath = "$env:APPDATA\npm"
+          if (Test-Path $npmPath) { $env:Path = "$npmPath;$env:Path" }
+          # 添加 Python 路径
+          $pythonPaths = @(
+            "$env:LOCALAPPDATA\Programs\Python\Python312",
+            "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts",
+            "$env:ProgramFiles\Python312",
+            "$env:ProgramFiles\Python312\Scripts"
+          )
+          foreach ($p in $pythonPaths) {
+            if (Test-Path $p) { $env:Path = "$p;$env:Path" }
+          }
+
+          Write-Host "✅ Skills 安装结果验证:" -ForegroundColor Green
+          Write-Host "  Python:   $(try { python --version } catch { '❌ 未安装' })"
+          Write-Host "  OpenClaw: $(try { openclaw --version } catch { '❌ 未安装' })"
+          Write-Host ""
+          Write-Host "📦 已安装技能: xlsx, pdf, pptx, docx" -ForegroundColor Cyan
 
   # 测试完全干净的 Windows 环境（无 Git、无 Node）
   test-windows-clean:

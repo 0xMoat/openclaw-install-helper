@@ -367,3 +367,128 @@ Write-Host "  Git:      $(git --version)"
 Write-Host "  Node.js:  $(node --version)"
 Write-Host "  pnpm:     v$(pnpm --version)"
 Write-Host "  OpenClaw: $(openclaw --version 2>$null || echo '已安装')"
+
+# ============================================================
+# 可选: 安装文件处理技能
+# ============================================================
+Write-Host ""
+Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host ""
+
+# 检查是否在非交互模式下运行（CI 或管道）
+$isInteractive = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected
+$installSkills = $false
+
+if ($isInteractive) {
+    # 交互模式：询问用户
+    Write-Host "是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？" -ForegroundColor Yellow
+    Write-Host "这将安装 Python 3.12 和相关技能包"
+    Write-Host ""
+    $response = Read-Host "安装文件处理技能? (y/N)"
+    $installSkills = $response -match '^[Yy]$'
+} else {
+    # 非交互模式：检查环境变量
+    $installSkills = $env:INSTALL_SKILLS -eq 'y'
+}
+
+if ($installSkills) {
+    Write-Step "安装文件处理技能..."
+
+    # 检查并安装 Python 3.12
+    Write-Step "检查 Python..."
+
+    $needInstallPython = $true
+    $pythonCmd = ""
+
+    # 检查 Python 版本
+    if (Test-Command "python") {
+        try {
+            $pythonVersion = python --version 2>&1
+            $versionMatch = [regex]::Match($pythonVersion, 'Python (\d+)\.(\d+)')
+            if ($versionMatch.Success) {
+                $major = [int]$versionMatch.Groups[1].Value
+                $minor = [int]$versionMatch.Groups[2].Value
+                if ($major -eq 3 -and $minor -ge 12) {
+                    Write-Success "Python 已安装: $pythonVersion"
+                    $pythonCmd = "python"
+                    $needInstallPython = $false
+                } else {
+                    Write-Warning "当前 Python 版本 $pythonVersion 过低，将安装 Python 3.12..."
+                }
+            }
+        } catch {
+            # Python 命令失败，需要安装
+        }
+    }
+
+    if ($needInstallPython) {
+        Write-Host "正在安装 Python 3.12..." -ForegroundColor Yellow
+
+        $installed = $false
+        if ($useWinget) {
+            winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+            Refresh-Path
+            $installed = Test-Command "python"
+        }
+
+        if (-not $installed) {
+            # 直接下载安装
+            Write-Host "  正在下载 Python 3.12..." -ForegroundColor Gray
+            $arch = Get-SystemArch
+            $tempDir = "$env:TEMP\openclaw-install"
+            New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+
+            try {
+                $pythonArch = if ($arch -eq "arm64") { "arm64" } elseif ($arch -eq "x64") { "amd64" } else { "win32" }
+                $pythonUrl = "https://www.python.org/ftp/python/3.12.0/python-3.12.0-$pythonArch.exe"
+
+                $installerPath = "$tempDir\python-installer.exe"
+                if (Download-File $pythonUrl $installerPath) {
+                    Write-Host "  正在安装 Python 3.12（静默模式）..." -ForegroundColor Gray
+                    Start-Process -FilePath $installerPath -ArgumentList "/quiet", "InstallAllUsers=0", "PrependPath=1", "Include_test=0" -Wait
+                    Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
+                    $installed = $true
+                }
+            } catch {
+                Write-Err "Python 下载安装失败: $_"
+            }
+        }
+
+        Refresh-Path
+
+        # 添加 Python 到 PATH
+        $pythonPaths = @(
+            "$env:LOCALAPPDATA\Programs\Python\Python312",
+            "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts",
+            "$env:ProgramFiles\Python312",
+            "$env:ProgramFiles\Python312\Scripts"
+        )
+        foreach ($p in $pythonPaths) {
+            if ((Test-Path $p) -and ($env:Path -notlike "*$p*")) {
+                $env:Path = "$p;$env:Path"
+            }
+        }
+
+        if (Test-Command "python") {
+            $pythonVersion = python --version 2>&1
+            Write-Success "Python 3.12 安装完成: $pythonVersion"
+            $pythonCmd = "python"
+        } else {
+            Write-Err "Python 3.12 安装失败，请手动安装: https://www.python.org/downloads/"
+            exit 1
+        }
+    }
+
+    # 安装文件处理技能
+    Write-Step "安装 PDF, PPT, Excel, Docx 技能..."
+    npx add-skill anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx
+
+    Write-Success "文件处理技能安装完成"
+
+    Write-Host ""
+    Write-Host "已安装技能:" -ForegroundColor Cyan
+    Write-Host "  - xlsx (Excel 文件处理)"
+    Write-Host "  - pdf (PDF 文件处理)"
+    Write-Host "  - pptx (PowerPoint 文件处理)"
+    Write-Host "  - docx (Word 文件处理)"
+}

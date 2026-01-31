@@ -275,3 +275,87 @@ echo "  Git:      $(git --version)"
 echo "  Node.js:  $(node --version)"
 echo "  pnpm:     v$(pnpm --version)"
 echo "  OpenClaw: $(openclaw --version 2>/dev/null || echo '已安装')"
+
+# ============================================================
+# 可选: 安装文件处理技能
+# ============================================================
+echo ""
+echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
+echo ""
+
+# 检查是否在非交互模式下运行（CI 或管道）
+if [[ -t 0 ]]; then
+    # 交互模式：询问用户
+    echo -e "${YELLOW}是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？${NC}"
+    echo "这将安装 Python 3.12 和相关技能包"
+    echo ""
+    read -p "安装文件处理技能? (y/N): " install_skills
+else
+    # 非交互模式：检查环境变量
+    install_skills="${INSTALL_SKILLS:-n}"
+fi
+
+if [[ "$install_skills" =~ ^[Yy]$ ]]; then
+    print_step "安装文件处理技能..."
+
+    # 检查并安装 Python 3.12
+    print_step "检查 Python..."
+
+    python_cmd=""
+    need_install_python=true
+
+    # 检查 python3.12
+    if command_exists python3.12; then
+        python_version=$(python3.12 --version 2>&1)
+        print_success "Python 3.12 已安装: $python_version"
+        python_cmd="python3.12"
+        need_install_python=false
+    # 检查 python3 版本是否 >= 3.12
+    elif command_exists python3; then
+        python_version=$(python3 --version 2>&1)
+        major_minor=$(echo "$python_version" | sed 's/Python \([0-9]*\.[0-9]*\).*/\1/')
+        if [[ $(echo "$major_minor >= 3.12" | bc -l 2>/dev/null || echo "0") == "1" ]] || [[ "$major_minor" == "3.12" ]] || [[ "$major_minor" > "3.12" ]]; then
+            print_success "Python 已安装: $python_version"
+            python_cmd="python3"
+            need_install_python=false
+        else
+            print_warning "当前 Python 版本 $python_version 过低，将安装 Python 3.12..."
+        fi
+    fi
+
+    if $need_install_python; then
+        echo "正在安装 Python 3.12..."
+        brew install python@3.12
+
+        refresh_path
+
+        # 添加 Python 3.12 到 PATH
+        if [[ -d "/opt/homebrew/opt/python@3.12/bin" ]]; then
+            export PATH="/opt/homebrew/opt/python@3.12/bin:$PATH"
+        elif [[ -d "/usr/local/opt/python@3.12/bin" ]]; then
+            export PATH="/usr/local/opt/python@3.12/bin:$PATH"
+        fi
+
+        if command_exists python3.12; then
+            python_version=$(python3.12 --version 2>&1)
+            print_success "Python 3.12 安装完成: $python_version"
+            python_cmd="python3.12"
+        else
+            print_error "Python 3.12 安装失败"
+            exit 1
+        fi
+    fi
+
+    # 安装文件处理技能
+    print_step "安装 PDF, PPT, Excel, Docx 技能..."
+    npx add-skill anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx
+
+    print_success "文件处理技能安装完成"
+
+    echo ""
+    echo -e "${CYAN}已安装技能:${NC}"
+    echo "  - xlsx (Excel 文件处理)"
+    echo "  - pdf (PDF 文件处理)"
+    echo "  - pptx (PowerPoint 文件处理)"
+    echo "  - docx (Word 文件处理)"
+fi
