@@ -199,16 +199,21 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "🧹 清理环境，模拟全新 Windows..." -ForegroundColor Yellow
-          winget uninstall --id Git.Git --silent --accept-package-agreements --accept-source-agreements 2>$null
-          if (Get-Command choco -ErrorAction SilentlyContinue) { choco uninstall git -y 2>$null }
+          # 尝试卸载 Git（忽略错误）
+          winget uninstall --id Git.Git --silent --accept-source-agreements 2>$null | Out-Null
+          # choco 卸载可能失败（如果未安装），忽略错误
+          if (Get-Command choco -ErrorAction SilentlyContinue) {
+            choco uninstall git -y --skip-autouninstaller 2>$null | Out-Null
+          }
           $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*Git*' }) -join ';'
 
+          # 禁用 winget
           Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "winget.exe" -ErrorAction SilentlyContinue | ForEach-Object {
-            Move-Item -Path $_.FullName -Destination "$($_.FullName).bak" -Force
+            Move-Item -Path $_.FullName -Destination "$($_.FullName).bak" -Force -ErrorAction SilentlyContinue
           }
           Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "*AppInstaller*" -ErrorAction SilentlyContinue | ForEach-Object {
             if ((Test-Path $_.FullName) -and ($_.Extension -in @('.exe', '.dll'))) {
-              Move-Item -Path $_.FullName -Destination "$($_.FullName).bak" -Force
+              Move-Item -Path $_.FullName -Destination "$($_.FullName).bak" -Force -ErrorAction SilentlyContinue
             }
           }
           $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*WindowsApps*' }) -join ';'
