@@ -18,49 +18,57 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check initial state
+      - name: Run install script (Full User Experience)
         run: |
-          echo "=== Initial State ==="
-          echo "Node: $(node --version 2>/dev/null || echo 'not installed')"
-          echo "pnpm: $(pnpm --version 2>/dev/null || echo 'not installed')"
-          echo "Git: $(git --version 2>/dev/null || echo 'not installed')"
+          echo "═══════════════════════════════════════════════════════════"
+          echo "📋 macOS 安装测试 - 模拟真实用户体验"
+          echo "═══════════════════════════════════════════════════════════"
+          echo ""
 
-      - name: Run install script
-        run: |
+          # 显示初始状态
+          echo "📊 安装前状态:"
+          echo "  Git:      $(command -v git > /dev/null && git --version || echo '未安装')"
+          echo "  Node.js:  $(command -v node > /dev/null && node --version || echo '未安装')"
+          echo "  pnpm:     $(command -v pnpm > /dev/null && pnpm --version || echo '未安装')"
+          echo "  OpenClaw: $(command -v openclaw > /dev/null && openclaw --version || echo '未安装')"
+          echo ""
+          echo "───────────────────────────────────────────────────────────────"
+          echo ""
+
+          # 运行安装脚本（显示完整输出）
           chmod +x install.sh
           ./install.sh
 
-      - name: Verify installation
-        run: |
-          echo "=== Verification ==="
+          echo ""
+          echo "───────────────────────────────────────────────────────────────"
+          echo ""
 
-          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
+      - name: Verify & Report Results
+        run: |
+          # 刷新 PATH
           if [[ -f "/opt/homebrew/bin/brew" ]]; then
             eval "$(/opt/homebrew/bin/brew shellenv)"
           elif [[ -f "/usr/local/bin/brew" ]]; then
             eval "$(/usr/local/bin/brew shellenv)"
           fi
-
-          # pnpm 路径
           export PNPM_HOME="$HOME/Library/pnpm"
           if [[ -d "$PNPM_HOME" ]]; then
             export PATH="$PNPM_HOME:$PATH"
           fi
-
-          # npm 全局路径
           if [[ -d "$HOME/.npm-global/bin" ]]; then
             export PATH="$HOME/.npm-global/bin:$PATH"
           fi
 
-          echo "Node: $(node --version)"
-          echo "pnpm: $(pnpm --version)"
-          echo "Git: $(git --version)"
-          echo "OpenClaw: $(openclaw --version 2>/dev/null || echo 'checking...')"
+          echo "✅ 安装结果验证:"
+          echo "  Git:      $(git --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  Node.js:  $(node --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  pnpm:     $(pnpm --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  OpenClaw: $(openclaw --version 2>/dev/null || echo '❌ 未安装')"
+          echo ""
 
-          # 验证命令是否可用
-          which node
-          which pnpm
-          which openclaw || echo "openclaw not in PATH yet"
+          # 检查命令路径
+          echo "📂 安装路径:"
+          which node pnpm openclaw 2>/dev/null || echo "  部分命令可能需要重启终端后使用"
 
   # 测试完全干净的 macOS 环境（无 Homebrew、无 Node）
   test-macos-clean:
@@ -68,79 +76,69 @@ jobs:
     steps:
       - name: Download install script (without git clone)
         run: |
-          # 不用 git checkout，直接下载脚本
           curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh" -o "install.sh"
 
-      - name: Uninstall Homebrew and Node to simulate clean environment
+      - name: Clean environment setup
         run: |
-          echo "=== Removing Homebrew and Node to simulate clean macOS ==="
-
-          # 卸载 Homebrew（使用官方卸载脚本，自动确认）
+          echo "🧹 清理环境，模拟全新 macOS..."
+          # 卸载 Homebrew
           if [[ -f "/opt/homebrew/bin/brew" ]] || [[ -f "/usr/local/bin/brew" ]]; then
-            echo "Uninstalling Homebrew..."
             NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)" < /dev/null
-
-            # 清理残留文件
             sudo rm -rf /opt/homebrew /usr/local/Homebrew /usr/local/Caskroom /usr/local/var/homebrew
             sudo rm -rf /Users/runner/.cache/Homebrew /Users/runner/.homebrew 2>/dev/null || true
           fi
-
-          # 从 PATH 中移除 Homebrew
           export PATH=$(echo "$PATH" | sed -E 's|/opt/homebrew/bin:/?|g' | sed -E 's|/opt/homebrew/sbin:/?|g' | sed -E 's|/usr/local/bin:/?|g')
-
-          # 卸载 Node.js（删除 Node 相关文件）
-          echo "Removing Node.js..."
           sudo rm -rf /opt/homebrew/bin/node /opt/homebrew/bin/npm /usr/local/bin/node /usr/local/bin/npm 2>/dev/null || true
           sudo rm -rf /usr/local/lib/node_modules /usr/local/include/node 2>/dev/null || true
           rm -rf ~/.npm ~/.nvm 2>/dev/null || true
-
-          # 从 PATH 中移除 Node
           export PATH=$(echo "$PATH" | sed -E 's|/opt/homebrew/bin:/?|g' | sed -E 's|/usr/local/bin:/?|g')
-
-          # 验证已移除
+          echo "  Homebrew: $(command -v brew || echo '✓ 已移除')"
+          echo "  Node.js:  $(command -v node || echo '✓ 已移除')"
           echo ""
-          echo "Homebrew after removal: $(command -v brew || echo 'not installed - SUCCESS')"
-          echo "Node after removal: $(command -v node || echo 'not installed - SUCCESS')"
 
-      - name: Check initial state (should be clean)
+      - name: Run install script (Full User Experience)
         run: |
-          echo "=== Initial State (Clean Environment) ==="
-          echo "Homebrew: $(command -v brew || echo 'not installed')"
-          echo "Node: $(command -v node || echo 'not installed')"
-          echo "Git: $(command -v git || echo 'not installed')"
-          echo "pnpm: $(command -v pnpm || echo 'not installed')"
+          echo "═══════════════════════════════════════════════════════════"
+          echo "📋 macOS 干净环境安装测试"
+          echo "═══════════════════════════════════════════════════════════"
+          echo ""
 
-      - name: Run install script
-        run: |
+          echo "📊 安装前状态:"
+          echo "  Homebrew: $(command -v brew > /dev/null || echo '未安装')"
+          echo "  Node.js:  $(command -v node > /dev/null || echo '未安装')"
+          echo "  Git:      $(command -v git > /dev/null || echo '未安装')"
+          echo "  pnpm:     $(command -v pnpm > /dev/null || echo '未安装')"
+          echo ""
+          echo "───────────────────────────────────────────────────────────────"
+          echo ""
+
           chmod +x install.sh
           ./install.sh
 
-      - name: Verify installation
-        run: |
-          echo "=== Verification ==="
+          echo ""
+          echo "───────────────────────────────────────────────────────────────"
+          echo ""
 
-          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
+      - name: Verify & Report Results
+        run: |
           if [[ -f "/opt/homebrew/bin/brew" ]]; then
             eval "$(/opt/homebrew/bin/brew shellenv)"
           elif [[ -f "/usr/local/bin/brew" ]]; then
             eval "$(/usr/local/bin/brew shellenv)"
           fi
-
-          # pnpm 路径
           export PNPM_HOME="$HOME/Library/pnpm"
           if [[ -d "$PNPM_HOME" ]]; then
             export PATH="$PNPM_HOME:$PATH"
           fi
-
-          # npm 全局路径
           if [[ -d "$HOME/.npm-global/bin" ]]; then
             export PATH="$HOME/.npm-global/bin:$PATH"
           fi
 
-          echo "Git: $(git --version)"
-          echo "Node: $(node --version)"
-          echo "pnpm: $(pnpm --version)"
-          echo "OpenClaw: $(openclaw --version 2>/dev/null || echo 'checking...')"
+          echo "✅ 安装结果验证:"
+          echo "  Git:      $(git --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  Node.js:  $(node --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  pnpm:     $(pnpm --version 2>/dev/null || echo '❌ 未安装')"
+          echo "  OpenClaw: $(openclaw --version 2>/dev/null || echo '❌ 未安装')"
 
   # 测试有 Git 的 Windows 环境
   test-windows:
@@ -149,148 +147,110 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check initial state
+      - name: Run install script (Full User Experience)
         shell: pwsh
         run: |
-          Write-Host "=== Initial State (with Git pre-installed) ==="
-          Write-Host "Node: $(try { node --version } catch { 'not installed' })"
-          Write-Host "pnpm: $(try { pnpm --version } catch { 'not installed' })"
-          Write-Host "Git: $(try { git --version } catch { 'not installed' })"
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host "📋 Windows 安装测试 - 模拟真实用户体验" -ForegroundColor Cyan
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host ""
 
-      - name: Run install script
-        shell: pwsh
-        run: |
+          Write-Host "📊 安装前状态:" -ForegroundColor Yellow
+          Write-Host "  Git:      $(try { git --version } catch { '未安装' })"
+          Write-Host "  Node.js:  $(try { node --version } catch { '未安装' })"
+          Write-Host "  pnpm:     $(try { pnpm --version } catch { '未安装' })"
+          Write-Host "  OpenClaw: $(try { openclaw --version } catch { '未安装' })"
+          Write-Host ""
+          Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor Gray
+          Write-Host ""
+
           Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
           .\install.ps1
 
-      - name: Verify installation
+          Write-Host ""
+          Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor Gray
+          Write-Host ""
+
+      - name: Verify & Report Results
         shell: pwsh
         run: |
-          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
-          # 添加 pnpm 路径
           $pnpmHome = "$env:LOCALAPPDATA\pnpm"
-          if (Test-Path $pnpmHome) {
-            $env:Path = "$pnpmHome;$env:Path"
-          }
-
-          # 添加 npm 全局路径
+          if (Test-Path $pnpmHome) { $env:Path = "$pnpmHome;$env:Path" }
           $npmPath = "$env:APPDATA\npm"
-          if (Test-Path $npmPath) {
-            $env:Path = "$npmPath;$env:Path"
-          }
+          if (Test-Path $npmPath) { $env:Path = "$npmPath;$env:Path" }
 
-          Write-Host "=== Verification ==="
-          Write-Host "Node: $(node --version)"
-          Write-Host "pnpm: $(pnpm --version)"
-          Write-Host "Git: $(git --version)"
-          Write-Host "OpenClaw: $(try { openclaw --version } catch { 'checking...' })"
+          Write-Host "✅ 安装结果验证:" -ForegroundColor Green
+          Write-Host "  Git:      $(try { git --version } catch { '❌ 未安装' })"
+          Write-Host "  Node.js:  $(try { node --version } catch { '❌ 未安装' })"
+          Write-Host "  pnpm:     $(try { pnpm --version } catch { '❌ 未安装' })"
+          Write-Host "  OpenClaw: $(try { openclaw --version } catch { '❌ 未安装' })"
 
   # 测试完全干净的 Windows 环境（无 Git、无 Node）
   test-windows-clean:
     runs-on: windows-latest
     steps:
-      - name: Download install script (without git clone)
+      - name: Download install script
         shell: pwsh
         run: |
-          # 不用 git checkout，直接下载脚本
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/install.ps1" -OutFile "install.ps1"
 
-      - name: Uninstall Git and winget to simulate clean environment
+      - name: Clean environment setup
         shell: pwsh
         run: |
-          Write-Host "=== Removing Git and winget to simulate clean Windows ==="
-
-          # 尝试用 winget 卸载 Git（在移除 winget 之前先利用它卸载 Git）
+          Write-Host "🧹 清理环境，模拟全新 Windows..." -ForegroundColor Yellow
           winget uninstall --id Git.Git --silent --accept-package-agreements --accept-source-agreements 2>$null
-
-          # 也尝试用 choco 卸载（如果存在）
-          if (Get-Command choco -ErrorAction SilentlyContinue) {
-            choco uninstall git -y 2>$null
-          }
-
-          # 从 PATH 中移除 Git
+          if (Get-Command choco -ErrorAction SilentlyContinue) { choco uninstall git -y 2>$null }
           $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*Git*' }) -join ';'
 
-          # 验证 Git 已移除
-          Write-Host "Git after removal: $(try { git --version } catch { 'not installed - SUCCESS' })"
-
-          Write-Host ""
-          Write-Host "=== Removing winget to simulate Windows 10 without winget ==="
-
-          # winget 是 App Installer 的一部分，我们通过禁用其可执行文件来模拟卸载
-          $wingetPaths = @(
-            "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe",
-            "$env:LOCALAPPDATA\Microsoft\WindowsApps\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe"
-          )
-
-          # 重命名 winget.exe 使其不可用
           Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "winget.exe" -ErrorAction SilentlyContinue | ForEach-Object {
-            $backupPath = "$($_.FullName).bak"
-            if (Test-Path $_.FullName) {
-              Move-Item -Path $_.FullName -Destination $backupPath -Force
-              Write-Host "Disabled: $($_.FullName)"
-            }
+            Move-Item -Path $_.FullName -Destination "$($_.FullName).bak" -Force
           }
-
-          # 同样处理 AppInstallerDL.exe 和相关组件
           Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "*AppInstaller*" -ErrorAction SilentlyContinue | ForEach-Object {
-            $backupPath = "$($_.FullName).bak"
             if ((Test-Path $_.FullName) -and ($_.Extension -in @('.exe', '.dll'))) {
-              Move-Item -Path $_.FullName -Destination $backupPath -Force
-              Write-Host "Disabled: $($_.FullName)"
+              Move-Item -Path $_.FullName -Destination "$($_.FullName).bak" -Force
             }
           }
-
-          # 从 PATH 中移除 WindowsApps（ winget 所在位置）
           $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*WindowsApps*' }) -join ';'
-
-          # 刷新命令查找缓存
-          if (Get-Command RefreshEnv -ErrorAction SilentlyContinue) {
-            RefreshEnv
-          }
-
-          # 验证 winget 已移除
+          Write-Host "  Git:    $(try { git --version } catch { '✓ 已移除' })"
+          Write-Host "  winget: $(try { winget --version } catch { '✓ 已移除' })"
           Write-Host ""
-          Write-Host "winget after removal: $(try { winget --version } catch { 'not installed - SUCCESS' })"
 
-      - name: Check initial state (should be clean)
+      - name: Run install script (Full User Experience)
         shell: pwsh
         run: |
-          Write-Host "=== Initial State (Clean Environment) ==="
-          Write-Host "Git: $(try { git --version } catch { 'not installed' })"
-          Write-Host "Node: $(try { node --version } catch { 'not installed' })"
-          Write-Host "pnpm: $(try { pnpm --version } catch { 'not installed' })"
-          Write-Host "winget: $(try { winget --version } catch { 'not installed' })"
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host "📋 Windows 干净环境安装测试" -ForegroundColor Cyan
+          Write-Host "═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
+          Write-Host ""
 
-      - name: Run install script
-        shell: pwsh
-        run: |
+          Write-Host "📊 安装前状态:" -ForegroundColor Yellow
+          Write-Host "  Git:    $(try { git --version } catch { '未安装' })"
+          Write-Host "  Node:   $(try { node --version } catch { '未安装' })"
+          Write-Host "  pnpm:   $(try { pnpm --version } catch { '未安装' })"
+          Write-Host "  winget: $(try { winget --version } catch { '未安装' })"
+          Write-Host ""
+          Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor Gray
+          Write-Host ""
+
           Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
           .\install.ps1
 
-      - name: Verify installation
+          Write-Host ""
+          Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor Gray
+          Write-Host ""
+
+      - name: Verify & Report Results
         shell: pwsh
         run: |
-          Write-Host "=== Verification ==="
-
-          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
-          # 添加 pnpm 路径
           $pnpmHome = "$env:LOCALAPPDATA\pnpm"
-          if (Test-Path $pnpmHome) {
-            $env:Path = "$pnpmHome;$env:Path"
-          }
-
-          # 添加 npm 全局路径
+          if (Test-Path $pnpmHome) { $env:Path = "$pnpmHome;$env:Path" }
           $npmPath = "$env:APPDATA\npm"
-          if (Test-Path $npmPath) {
-            $env:Path = "$npmPath;$env:Path"
-          }
+          if (Test-Path $npmPath) { $env:Path = "$npmPath;$env:Path" }
 
-          Write-Host "Git: $(git --version)"
-          Write-Host "Node: $(node --version)"
-          Write-Host "pnpm: $(pnpm --version)"
-          Write-Host "OpenClaw: $(try { openclaw --version } catch { 'checking...' })"
+          Write-Host "✅ 安装结果验证:" -ForegroundColor Green
+          Write-Host "  Git:      $(try { git --version } catch { '❌ 未安装' })"
+          Write-Host "  Node.js:  $(try { node --version } catch { '❌ 未安装' })"
+          Write-Host "  pnpm:     $(try { pnpm --version } catch { '❌ 未安装' })"
+          Write-Host "  OpenClaw: $(try { openclaw --version } catch { '❌ 未安装' })"
