@@ -677,36 +677,45 @@
                     </defs>
 
                     <!-- Feishu Paper Plane Logo - Authentic Design -->
-                    <g class="paper-plane" transform="translate(10, 20)">
-                        <!-- Bottom shape - Primary Blue #0078D4 -->
-                        <!-- Large curved shape, left side vertical, curves up-right -->
-                        <path d="M20 60
-                                 L20 130
-                                 Q80 145 140 110
-                                 L140 50
-                                 Q80 35 20 60Z"
-                              fill="#0078D4"/>
+                    <g class="paper-plane" transform="translate(5, 15)">
+                        <!-- Bottom/Back shape - Primary Blue #3370FF (Feishu brand color) -->
+                        <!-- Large curved wing shape forming the base -->
+                        <path d="M15 45
+                                 L15 115
+                                 C15 125 35 135 55 138
+                                 C75 141 100 135 120 128
+                                 C140 120 155 105 155 90
+                                 L155 35
+                                 C155 25 135 18 115 18
+                                 C95 18 70 22 50 28
+                                 C30 34 15 40 15 45Z"
+                              fill="#3370FF"/>
 
-                        <!-- Middle shape - Dark Blue #003B7A -->
-                        <!-- Narrower curve, sits on top of primary shape -->
-                        <path d="M75 35
-                                 Q80 100 120 120
-                                 L120 50
-                                 Q98 40 75 35Z"
-                              fill="#003B7A"/>
+                        <!-- Middle shape - Darker Blue #165DFF -->
+                        <!-- Mid-layer curved shape, sits on top, adds depth -->
+                        <path d="M55 20
+                                 C70 25 95 30 120 35
+                                 C135 40 148 50 152 65
+                                 C148 90 130 110 110 122
+                                 C90 130 70 132 55 132
+                                 C60 110 70 70 75 35
+                                 C72 28 68 22 55 20Z"
+                              fill="#165DFF"/>
 
-                        <!-- Top shape - Teal #00B7A7 -->
-                        <!-- Smallest accent, top-left -->
-                        <path d="M35 20
-                                 Q70 28 85 40
-                                 L60 32
-                                 Q48 26 35 20Z"
-                              fill="#00B7A7"/>
+                        <!-- Top shape - Light Teal/Cyan #00D6B9 -->
+                        <!-- Small accent at top-left wing tip -->
+                        <path d="M35 8
+                                 C50 12 75 18 95 22
+                                 L75 18
+                                 C60 15 45 12 35 8Z"
+                              fill="#00D6B9"/>
 
                         <!-- Motion lines (flying effect) -->
-                        <path d="M10 145 L-10 170" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
-                        <path d="M80 150 L80 175" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
-                        <path d="M150 145 L170 170" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+                        <g opacity="0.25">
+                            <path d="M5 145 L-15 170" stroke="#3370FF" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M50 155 L40 180" stroke="#3370FF" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M155 145 L175 165" stroke="#3370FF" stroke-width="2" stroke-linecap="round"/>
+                        </g>
                     </g>
 
                     <!-- Lobster sitting on plane -->
