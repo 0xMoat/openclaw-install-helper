@@ -6,6 +6,7 @@ on:
     paths:
       - 'install.sh'
       - 'install.ps1'
+      - '.github/workflows/*.yml'
   pull_request:
     branches: [main]
   workflow_dispatch:  # 允许手动触发
