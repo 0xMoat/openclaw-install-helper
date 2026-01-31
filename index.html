@@ -107,17 +107,15 @@
             50% { transform: rotate(-10deg) translate(15px, -10px); }
         }
 
-        /* Flying Mascot Animations */
-        @keyframes flying {
-            0%, 100% { transform: translateY(0px) rotate(-2deg); }
-            25% { transform: translateY(-8px) rotate(0deg); }
-            50% { transform: translateY(-4px) rotate(2deg); }
-            75% { transform: translateY(-10px) rotate(0deg); }
+        /* Lobster Mascot Animations */
+        @keyframes lobster-float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
         }
 
         @keyframes lobster-blink {
-            0%, 90%, 100% { opacity: 1; }
-            95% { opacity: 0.3; }
+            0%, 90%, 100% { opacity: 1; transform: scaleY(1); }
+            95% { opacity: 0.4; transform: scaleY(0.1); }
         }
 
         @keyframes antenna-wiggle {
@@ -126,66 +124,72 @@
             75% { transform: rotate(5deg); }
         }
 
+        @keyframes claw-snap {
+            0%, 85%, 100% { transform: rotate(0deg) scale(1); }
+            90% { transform: rotate(-10deg) scale(0.95); }
+            95% { transform: rotate(5deg) scale(1.02); }
+        }
+
         @keyframes eye-glow {
             0%, 100% { opacity: 0.5; }
             50% { opacity: 1; }
         }
 
-        .flying-mascot {
-            width: 140px;
-            height: 120px;
+        .lobster-mascot {
+            width: 100px;
+            height: 100px;
             margin: 0 auto 30px;
-            animation: flying 3s ease-in-out infinite;
+            animation: lobster-float 4s ease-in-out infinite;
             cursor: pointer;
             transition: transform 0.3s ease;
         }
 
-        .flying-mascot:hover {
-            transform: scale(1.1) rotate(0deg);
+        .lobster-mascot:hover {
+            transform: scale(1.15);
             animation: none;
         }
 
-        .flying-mascot svg {
+        .lobster-mascot svg {
             width: 100%;
             height: 100%;
-            filter: drop-shadow(0 10px 25px rgba(78, 205, 196, 0.4));
+            filter: drop-shadow(0 8px 20px rgba(255, 107, 53, 0.3));
             transition: filter 0.3s ease;
         }
 
-        .flying-mascot:hover svg {
-            filter: drop-shadow(0 15px 35px rgba(78, 205, 196, 0.6));
+        .lobster-mascot:hover svg {
+            filter: drop-shadow(0 12px 30px rgba(78, 205, 196, 0.5));
         }
 
-        .paper-plane {
-            animation: plane-glide 2.5s ease-in-out infinite;
-        }
-
-        .flying-mascot .claw-body {
+        .lobster-mascot .claw-body {
             fill: url(#lobster-gradient);
         }
 
-        .flying-mascot .claw-left {
+        .lobster-mascot .claw-left {
             fill: url(#lobster-gradient);
+            transform-origin: 30px 55px;
+            animation: claw-snap 5s ease-in-out infinite;
         }
 
-        .flying-mascot .claw-right {
+        .lobster-mascot .claw-right {
             fill: url(#lobster-gradient);
+            transform-origin: 90px 55px;
+            animation: claw-snap 5s ease-in-out infinite 0.5s;
         }
 
-        .flying-mascot .antenna {
+        .lobster-mascot .antenna {
             animation: antenna-wiggle 2.5s ease-in-out infinite;
             transform-origin: center center;
         }
 
-        .flying-mascot .antenna:last-child {
+        .lobster-mascot .antenna:last-child {
             animation-delay: 0.3s;
         }
 
-        .flying-mascot .eye {
+        .lobster-mascot .eye {
             animation: lobster-blink 4s ease-in-out infinite;
         }
 
-        .flying-mascot .eye-glow {
+        .lobster-mascot .eye-glow {
             animation: eye-glow 2s ease-in-out infinite;
         }
 
@@ -661,8 +665,8 @@
     <div class="container">
         <header>
             <!-- Lobster Mascot -->
-            <div class="flying-mascot">
-                <svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="lobster-mascot">
+                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="lobster-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" style="stop-color:#ff6b35"/>
@@ -670,43 +674,33 @@
                             <stop offset="100%" style="stop-color:#e85d2a"/>
                         </linearGradient>
                     </defs>
-
-                    <!-- Lobster Mascot -->
-                    <g transform="translate(15, 30)">
-                        <!-- Body -->
-                        <path class="claw-body" d="M85 18 C60 18 48 35 48 45 C48 60 62 70 70 72 L70 82 L76 82 L76 72 C76 72 82 75 88 72 L88 82 L88 72 C105 70 122 60 122 45 C122 30 110 18 85 18Z"/>
-
-                        <!-- Left Claw -->
-                        <path class="claw-left" d="M35 50 C25 48 18 55 22 65 C28 72 38 68 42 60 C45 55 40 52 35 50Z"/>
-
-                        <!-- Right Claw -->
-                        <path class="claw-right" d="M135 50 C145 48 152 55 148 65 C142 72 132 68 128 60 C125 55 130 52 135 50Z"/>
-
-                        <!-- Left Eye -->
-                        <g class="eye">
-                            <ellipse cx="72" cy="40" rx="7" ry="8" fill="#1a1a1a"/>
-                            <ellipse cx="74" cy="38" rx="3" ry="3.5" fill="#00B7A7" class="eye-glow"/>
-                        </g>
-
-                        <!-- Right Eye -->
-                        <g class="eye">
-                            <ellipse cx="98" cy="40" rx="7" ry="8" fill="#1a1a1a"/>
-                            <ellipse cx="100" cy="38" rx="3" ry="3.5" fill="#00B7A7" class="eye-glow"/>
-                        </g>
-
-                        <!-- Left Antenna -->
-                        <path class="antenna" d="M68 23 Q52 8 48 13" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-
-                        <!-- Right Antenna -->
-                        <path class="antenna" d="M102 23 Q118 8 122 13" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-
-                        <!-- Smile -->
-                        <path d="M75 50 Q85 55 95 50" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/>
-
-                        <!-- Legs dangling -->
-                        <path d="M70 72 L66 82" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
-                        <path d="M100 72 L104 82" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
+                    <!-- Body -->
+                    <path class="claw-body" d="M60 15 C35 15 20 35 20 50 C20 70 35 90 48 95 L48 108 L52 108 L52 95 C52 95 60 98 68 95 L68 108 L72 108 L72 95 C90 90 100 70 100 50 C100 35 85 15 60 15Z"/>
+                    <!-- Left Claw -->
+                    <path class="claw-left" d="M18 42 C8 38 5 48 8 58 C12 68 22 62 28 52 C30 46 26 42 18 42Z"/>
+                    <!-- Right Claw -->
+                    <path class="claw-right" d="M102 42 C112 38 115 48 112 58 C108 68 98 62 92 52 C90 46 94 42 102 42Z"/>
+                    <!-- Left Eye -->
+                    <g class="eye">
+                        <ellipse cx="45" cy="45" rx="8" ry="10" fill="#1a1a1a"/>
+                        <ellipse cx="47" cy="43" rx="3" ry="4" fill="#4ecdc4" class="eye-glow"/>
                     </g>
+                    <!-- Right Eye -->
+                    <g class="eye">
+                        <ellipse cx="75" cy="45" rx="8" ry="10" fill="#1a1a1a"/>
+                        <ellipse cx="77" cy="43" rx="3" ry="4" fill="#4ecdc4" class="eye-glow"/>
+                    </g>
+                    <!-- Left Antenna -->
+                    <path class="antenna" d="M42 20 Q32 8 28 12" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <!-- Right Antenna -->
+                    <path class="antenna" d="M78 20 Q88 8 92 12" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <!-- Mouth -->
+                    <path d="M50 62 Q60 68 70 62" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    <!-- Legs -->
+                    <path d="M35 85 L30 100" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M45 90 L42 105" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M75 90 L78 105" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M85 85 L90 100" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
                 </svg>
             </div>
 
