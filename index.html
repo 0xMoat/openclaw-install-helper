@@ -113,6 +113,16 @@
             50% { transform: translateY(-12px); }
         }
 
+        @keyframes feishu-float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes heart-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
         @keyframes lobster-blink {
             0%, 90%, 100% { opacity: 1; }
             95% { opacity: 0.3; }
@@ -135,10 +145,22 @@
             50% { opacity: 1; }
         }
 
-        .lobster-mascot {
-            width: 100px;
-            height: 100px;
+        .mascots-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             margin: 0 auto 30px;
+        }
+
+        .heart-connector {
+            font-size: 1.5rem;
+            animation: heart-pulse 1.2s ease-in-out infinite;
+        }
+
+        .lobster-mascot {
+            width: 80px;
+            height: 80px;
             animation: lobster-float 4s ease-in-out infinite;
             cursor: pointer;
             transition: transform 0.3s ease;
@@ -158,6 +180,18 @@
 
         .lobster-mascot:hover svg {
             filter: drop-shadow(0 12px 30px rgba(78, 205, 196, 0.5));
+        }
+
+        .feishu-logo {
+            width: 70px;
+            height: 70px;
+            animation: feishu-float 3.5s ease-in-out infinite 0.5s;
+        }
+
+        .feishu-logo svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 6px 15px rgba(51, 112, 255, 0.25));
         }
 
         .lobster-mascot .claw-body {
@@ -664,44 +698,82 @@
 
     <div class="container">
         <header>
-            <!-- Lobster Mascot -->
-            <div class="lobster-mascot">
-                <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <linearGradient id="lobster-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#ff6b35"/>
-                            <stop offset="50%" style="stop-color:#ff8c5a"/>
-                            <stop offset="100%" style="stop-color:#e85d2a"/>
-                        </linearGradient>
-                    </defs>
-                    <!-- Body -->
-                    <path class="claw-body" d="M60 15 C35 15 20 35 20 50 C20 70 35 90 48 95 L48 108 L52 108 L52 95 C52 95 60 98 68 95 L68 108 L72 108 L72 95 C90 90 100 70 100 50 C100 35 85 15 60 15Z"/>
-                    <!-- Left Claw -->
-                    <path class="claw-left" d="M18 42 C8 38 5 48 8 58 C12 68 22 62 28 52 C30 46 26 42 18 42Z"/>
-                    <!-- Right Claw -->
-                    <path class="claw-right" d="M102 42 C112 38 115 48 112 58 C108 68 98 62 92 52 C90 46 94 42 102 42Z"/>
-                    <!-- Left Eye -->
-                    <g class="eye">
-                        <ellipse cx="45" cy="45" rx="8" ry="10" fill="#1a1a1a"/>
-                        <ellipse cx="47" cy="43" rx="3" ry="4" fill="#4ecdc4" class="eye-glow"/>
-                    </g>
-                    <!-- Right Eye -->
-                    <g class="eye">
-                        <ellipse cx="75" cy="45" rx="8" ry="10" fill="#1a1a1a"/>
-                        <ellipse cx="77" cy="43" rx="3" ry="4" fill="#4ecdc4" class="eye-glow"/>
-                    </g>
-                    <!-- Left Antenna -->
-                    <path class="antenna" d="M42 20 Q32 8 28 12" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <!-- Right Antenna -->
-                    <path class="antenna" d="M78 20 Q88 8 92 12" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <!-- Mouth -->
-                    <path d="M50 62 Q60 68 70 62" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/>
-                    <!-- Legs -->
-                    <path d="M35 85 L30 100" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
-                    <path d="M45 90 L42 105" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
-                    <path d="M75 90 L78 105" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
-                    <path d="M85 85 L90 100" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
-                </svg>
+            <!-- Mascots Container -->
+            <div class="mascots-container">
+                <!-- Lobster Mascot -->
+                <div class="lobster-mascot">
+                    <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="lobster-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ff6b35"/>
+                                <stop offset="50%" style="stop-color:#ff8c5a"/>
+                                <stop offset="100%" style="stop-color:#e85d2a"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Body -->
+                        <path class="claw-body" d="M60 15 C35 15 20 35 20 50 C20 70 35 90 48 95 L48 108 L52 108 L52 95 C52 95 60 98 68 95 L68 108 L72 108 L72 95 C90 90 100 70 100 50 C100 35 85 15 60 15Z"/>
+                        <!-- Left Claw -->
+                        <path class="claw-left" d="M18 42 C8 38 5 48 8 58 C12 68 22 62 28 52 C30 46 26 42 18 42Z"/>
+                        <!-- Right Claw -->
+                        <path class="claw-right" d="M102 42 C112 38 115 48 112 58 C108 68 98 62 92 52 C90 46 94 42 102 42Z"/>
+                        <!-- Left Eye -->
+                        <g class="eye">
+                            <ellipse cx="45" cy="45" rx="8" ry="10" fill="#1a1a1a"/>
+                            <ellipse cx="47" cy="43" rx="3" ry="4" fill="#4ecdc4" class="eye-glow"/>
+                        </g>
+                        <!-- Right Eye -->
+                        <g class="eye">
+                            <ellipse cx="75" cy="45" rx="8" ry="10" fill="#1a1a1a"/>
+                            <ellipse cx="77" cy="43" rx="3" ry="4" fill="#4ecdc4" class="eye-glow"/>
+                        </g>
+                        <!-- Left Antenna -->
+                        <path class="antenna" d="M42 20 Q32 8 28 12" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <!-- Right Antenna -->
+                        <path class="antenna" d="M78 20 Q88 8 92 12" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                        <!-- Mouth -->
+                        <path d="M50 62 Q60 68 70 62" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <!-- Legs -->
+                        <path d="M35 85 L30 100" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M45 90 L42 105" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M75 90 L78 105" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M85 85 L90 100" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <!-- Heart -->
+                <span class="heart-connector">❤️</span>
+
+                <!-- Feishu Logo -->
+                <div class="feishu-logo">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Feishu Logo - Three overlapping curved shapes -->
+                        <!-- Bottom shape - main blue -->
+                        <path d="M15 30
+                                 L15 75
+                                 C15 82 30 90 45 92
+                                 C60 94 80 88 95 78
+                                 C100 73 100 68 100 60
+                                 L100 25
+                                 C100 18 85 12 70 12
+                                 C50 12 30 18 15 30Z"
+                              fill="#3370FF"/>
+                        <!-- Middle shape - darker blue -->
+                        <path d="M40 15
+                                 C55 18 75 22 90 28
+                                 C95 32 98 42 95 55
+                                 C90 70 75 82 58 88
+                                 C45 90 35 88 30 80
+                                 C35 65 42 40 45 25
+                                 C43 20 42 17 40 15Z"
+                              fill="#165DFF"/>
+                        <!-- Top accent - light teal -->
+                        <path d="M25 5
+                                 C38 10 58 16 75 20
+                                 L60 17
+                                 C45 14 32 10 25 5Z"
+                              fill="#00D6B9"/>
+                    </svg>
+                </div>
             </div>
 
             <div class="badge">OpenClaw Install Helper</div>
