@@ -1,0 +1,171 @@
+name: Test Install Scripts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'install.sh'
+      - 'install.ps1'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check initial state
+        run: |
+          echo "=== Initial State ==="
+          echo "Node: $(node --version 2>/dev/null || echo 'not installed')"
+          echo "pnpm: $(pnpm --version 2>/dev/null || echo 'not installed')"
+          echo "Git: $(git --version 2>/dev/null || echo 'not installed')"
+
+      - name: Run install script
+        run: |
+          chmod +x install.sh
+          ./install.sh
+
+      - name: Verify installation
+        run: |
+          echo "=== Verification ==="
+          echo "Node: $(node --version)"
+          echo "pnpm: $(pnpm --version)"
+          echo "Git: $(git --version)"
+          echo "OpenClaw: $(openclaw --version 2>/dev/null || echo 'checking...')"
+
+          # 验证命令是否可用
+          which node
+          which pnpm
+          which openclaw || echo "openclaw not in PATH yet"
+
+  # 测试有 Git 的 Windows 环境
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check initial state
+        shell: pwsh
+        run: |
+          Write-Host "=== Initial State (with Git pre-installed) ==="
+          Write-Host "Node: $(try { node --version } catch { 'not installed' })"
+          Write-Host "pnpm: $(try { pnpm --version } catch { 'not installed' })"
+          Write-Host "Git: $(try { git --version } catch { 'not installed' })"
+
+      - name: Run install script
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+          .\install.ps1
+
+      - name: Verify installation
+        shell: pwsh
+        run: |
+          Write-Host "=== Verification ==="
+          Write-Host "Node: $(node --version)"
+          Write-Host "pnpm: $(pnpm --version)"
+          Write-Host "Git: $(git --version)"
+
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          Write-Host "OpenClaw: $(try { openclaw --version } catch { 'checking...' })"
+
+  # 测试完全干净的 Windows 环境（无 Git、无 Node）
+  test-windows-clean:
+    runs-on: windows-latest
+    steps:
+      - name: Download install script (without git clone)
+        shell: pwsh
+        run: |
+          # 不用 git checkout，直接下载脚本
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/main/install.ps1" -OutFile "install.ps1"
+
+      - name: Uninstall Git and winget to simulate clean environment
+        shell: pwsh
+        run: |
+          Write-Host "=== Removing Git and winget to simulate clean Windows ==="
+
+          # 尝试用 winget 卸载 Git（在移除 winget 之前先利用它卸载 Git）
+          winget uninstall --id Git.Git --silent 2>$null
+
+          # 也尝试用 choco 卸载（如果存在）
+          if (Get-Command choco -ErrorAction SilentlyContinue) {
+            choco uninstall git -y 2>$null
+          }
+
+          # 从 PATH 中移除 Git
+          $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*Git*' }) -join ';'
+
+          # 验证 Git 已移除
+          Write-Host "Git after removal: $(try { git --version } catch { 'not installed - SUCCESS' })"
+
+          Write-Host ""
+          Write-Host "=== Removing winget to simulate Windows 10 without winget ==="
+
+          # winget 是 App Installer 的一部分，我们通过禁用其可执行文件来模拟卸载
+          $wingetPaths = @(
+            "$env:LOCALAPPDATA\Microsoft\WindowsApps\winget.exe",
+            "$env:LOCALAPPDATA\Microsoft\WindowsApps\WindowsApps\Microsoft.DesktopAppInstaller_*\winget.exe"
+          )
+
+          # 重命名 winget.exe 使其不可用
+          Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "winget.exe" -ErrorAction SilentlyContinue | ForEach-Object {
+            $backupPath = "$($_.FullName).bak"
+            if (Test-Path $_.FullName) {
+              Move-Item -Path $_.FullName -Destination $backupPath -Force
+              Write-Host "Disabled: $($_.FullName)"
+            }
+          }
+
+          # 同样处理 AppInstallerDL.exe 和相关组件
+          Get-ChildItem -Path "$env:LOCALAPPDATA\Microsoft\WindowsApps" -Filter "*AppInstaller*" -ErrorAction SilentlyContinue | ForEach-Object {
+            $backupPath = "$($_.FullName).bak"
+            if (Test-Path $_.FullName -and $_.Extension -in @('.exe', '.dll')) {
+              Move-Item -Path $_.FullName -Destination $backupPath -Force
+              Write-Host "Disabled: $($_.FullName)"
+            }
+          }
+
+          # 从 PATH 中移除 WindowsApps（ winget 所在位置）
+          $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*WindowsApps*' }) -join ';'
+
+          # 刷新命令查找缓存
+          if (Get-Command RefreshEnv -ErrorAction SilentlyContinue) {
+            RefreshEnv
+          }
+
+          # 验证 winget 已移除
+          Write-Host ""
+          Write-Host "winget after removal: $(try { winget --version } catch { 'not installed - SUCCESS' })"
+
+      - name: Check initial state (should be clean)
+        shell: pwsh
+        run: |
+          Write-Host "=== Initial State (Clean Environment) ==="
+          Write-Host "Git: $(try { git --version } catch { 'not installed' })"
+          Write-Host "Node: $(try { node --version } catch { 'not installed' })"
+          Write-Host "pnpm: $(try { pnpm --version } catch { 'not installed' })"
+          Write-Host "winget: $(try { winget --version } catch { 'not installed' })"
+
+      - name: Run install script
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+          .\install.ps1
+
+      - name: Verify installation
+        shell: pwsh
+        run: |
+          Write-Host "=== Verification ==="
+
+          # 刷新 PATH
+          $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
+          Write-Host "Git: $(git --version)"
+          Write-Host "Node: $(node --version)"
+          Write-Host "pnpm: $(pnpm --version)"
+          Write-Host "OpenClaw: $(try { openclaw --version } catch { 'checking...' })"

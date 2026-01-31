@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Install Helper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fffbeb;
+            --black: #1a1a1a;
+            --white: #ffffff;
+            --primary: #ff6b35;
+            --secondary: #4ecdc4;
+            --accent: #ffe66d;
+            --purple: #a855f7;
+            --border: 3px solid var(--black);
+            --shadow: 6px 6px 0 var(--black);
+            --shadow-sm: 4px 4px 0 var(--black);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg);
+            color: var(--black);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Decorative shapes */
+        .shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            border: var(--border);
+        }
+
+        .shape-1 {
+            width: 120px;
+            height: 120px;
+            background: var(--accent);
+            top: 10%;
+            left: 5%;
+            transform: rotate(15deg);
+            animation: float1 6s ease-in-out infinite;
+        }
+
+        .shape-2 {
+            width: 80px;
+            height: 80px;
+            background: var(--secondary);
+            border-radius: 50%;
+            top: 20%;
+            right: 8%;
+            animation: float2 8s ease-in-out infinite;
+        }
+
+        .shape-3 {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            bottom: 15%;
+            left: 10%;
+            transform: rotate(-10deg);
+            animation: float3 7s ease-in-out infinite;
+        }
+
+        .shape-4 {
+            width: 100px;
+            height: 100px;
+            background: var(--purple);
+            border-radius: 50%;
+            bottom: 25%;
+            right: 5%;
+            animation: float1 9s ease-in-out infinite reverse;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: rotate(15deg) translate(0, 0); }
+            50% { transform: rotate(15deg) translate(10px, -15px); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-10px, 10px) scale(1.05); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: rotate(-10deg) translate(0, 0); }
+            50% { transform: rotate(-10deg) translate(15px, -10px); }
+        }
+
+        /* Container */
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 60px 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--black);
+            color: var(--white);
+            padding: 8px 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            transform: rotate(-2deg);
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 10vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        h1 .highlight {
+            background: var(--accent);
+            padding: 0 10px;
+            display: inline-block;
+            transform: rotate(-1deg);
+            border: var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 450px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .features-header {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .feature-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .feature-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--black);
+        }
+
+        /* OS Detection Card */
+        .os-card {
+            background: var(--white);
+            border: var(--border);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin-bottom: 30px;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .os-card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0 var(--black);
+        }
+
+        .os-card.mac { border-top: 8px solid var(--secondary); }
+        .os-card.windows { border-top: 8px solid var(--primary); }
+
+        .os-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .os-icon {
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            border: var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .os-icon.mac { background: var(--secondary); }
+        .os-icon.windows { background: var(--primary); }
+
+        .os-info h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .os-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .detected-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: var(--accent);
+            border: var(--border);
+            padding: 6px 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            transform: rotate(3deg);
+        }
+
+        /* Command Box */
+        .command-wrapper {
+            background: var(--black);
+            border: var(--border);
+            padding: 25px;
+            position: relative;
+        }
+
+        .command-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .command-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--white);
+            word-break: break-all;
+            line-height: 1.5;
+            padding-right: 50px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            border: 3px solid var(--white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.15s ease;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .copy-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .copy-btn.copied {
+            background: var(--secondary);
+        }
+
+        /* Steps */
+        .steps {
+            margin-top: 25px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 2px dashed #ddd;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border: 2px solid var(--black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding-top: 4px;
+        }
+
+        .step-text strong {
+            background: #f0f0f0;
+            padding: 2px 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .step-text a {
+            color: var(--black);
+            font-weight: 600;
+        }
+
+        .step-feishu {
+            background: linear-gradient(135deg, rgba(51, 112, 255, 0.08) 0%, rgba(51, 112, 255, 0.03) 100%);
+            margin: 0 -20px;
+            padding: 12px 20px !important;
+            border-bottom: none !important;
+        }
+
+        .expand-guide-btn {
+            display: inline-block;
+            margin-left: 10px;
+            background: var(--black);
+            color: var(--white);
+            border: none;
+            padding: 6px 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .expand-guide-btn:hover {
+            background: var(--secondary);
+            color: var(--black);
+        }
+
+        .expand-guide-btn.open {
+            background: var(--secondary);
+            color: var(--black);
+        }
+
+        /* Feishu Guide Inline */
+        .feishu-guide {
+            background: #f8f9fa;
+            border-top: 2px dashed #ddd;
+            padding: 25px 20px;
+            margin: 0 -40px -40px -40px;
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .guide-grid {
+                grid-template-columns: 1fr;
+            }
+            .feishu-guide {
+                margin: 0 -20px -30px -20px;
+            }
+        }
+
+        .guide-item {
+            display: flex;
+            gap: 12px;
+            background: var(--white);
+            padding: 15px;
+            border: 2px solid #eee;
+        }
+
+        .guide-item-num {
+            width: 28px;
+            height: 28px;
+            background: var(--accent);
+            border: 2px solid var(--black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .guide-item-content h4 {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .guide-item-content p {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .guide-image-slot {
+            aspect-ratio: 16/9;
+            background: #f0f0f0;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        /* Switch OS Link */
+        .switch-os {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .switch-os button {
+            background: none;
+            border: none;
+            color: #666;
+            font-family: 'Sora', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color 0.2s ease;
+        }
+
+        .switch-os button:hover {
+            color: var(--black);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+        }
+
+        footer a {
+            display: inline-block;
+            background: var(--black);
+            color: var(--white);
+            padding: 12px 30px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            text-decoration: none;
+            border: var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.15s ease;
+        }
+
+        footer a:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--black);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--black);
+            color: var(--white);
+            padding: 15px 30px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            border: 3px solid var(--accent);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Hidden state */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 60px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #ddd;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            .os-card {
+                padding: 30px 20px;
+            }
+
+            .os-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .command-text {
+                font-size: 0.7rem;
+            }
+
+            .shape {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative shapes -->
+    <div class="shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="badge">OpenClaw Install Helper</div>
+            <h1>
+                安装只需
+                <span class="highlight">一步</span>
+            </h1>
+            <p class="subtitle">
+                复制下方命令，粘贴运行。<br>
+                剩下的事情，交给我们。
+            </p>
+
+            <!-- Features moved here -->
+            <div class="features-header">
+                <div class="feature-inline">
+                    <span class="feature-dot" style="background: var(--accent);"></span>
+                    <span>全自动安装</span>
+                </div>
+                <div class="feature-inline">
+                    <span class="feature-dot" style="background: var(--secondary);"></span>
+                    <span>无需翻墙</span>
+                </div>
+                <div class="feature-inline">
+                    <span class="feature-dot" style="background: var(--purple);"></span>
+                    <span>集成飞书插件</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading state -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>正在检测你的操作系统...</p>
+        </div>
+
+        <!-- macOS Card -->
+        <div class="os-card mac hidden" id="mac-card">
+            <div class="detected-badge" id="mac-detected">已检测</div>
+            <div class="os-header">
+                <div class="os-icon mac">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                </div>
+                <div class="os-info">
+                    <h2>macOS</h2>
+                    <p>适用于 MacBook / iMac / Mac mini</p>
+                </div>
+            </div>
+
+            <div class="command-wrapper">
+                <div class="command-label">在终端中运行</div>
+                <code class="command-text" id="mac-cmd">curl -fsSL https://raw.githubusercontent.com/0xMoat/openclaw-install-helper/main/install.sh | bash</code>
+                <button class="copy-btn" onclick="copyCommand('mac-cmd', this)" aria-label="复制">📋</button>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <span class="step-num">1</span>
+                    <span class="step-text">按下 <strong>⌘ + 空格</strong>，输入「终端」并回车打开</span>
+                </div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <span class="step-text">点击右侧 📋 复制命令，在终端中粘贴</span>
+                </div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <span class="step-text">按下 <strong>回车</strong>，等待安装完成</span>
+                </div>
+                <div class="step step-feishu">
+                    <span class="step-num">4</span>
+                    <span class="step-text">
+                        前往 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a> 配置 Bot
+                        <button class="expand-guide-btn" onclick="toggleFeishuGuide('mac')">查看配置指南 ▼</button>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Feishu Guide for Mac -->
+            <div class="feishu-guide hidden" id="feishu-guide-mac">
+                <div class="guide-grid">
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.1</div>
+                        <div class="guide-item-content">
+                            <h4>创建飞书应用</h4>
+                            <p>登录飞书开放平台，创建企业自建应用</p>
+                            <div class="guide-image-slot" id="guide-img-mac-1">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.2</div>
+                        <div class="guide-item-content">
+                            <h4>添加机器人能力</h4>
+                            <p>在应用中添加「机器人」能力</p>
+                            <div class="guide-image-slot" id="guide-img-mac-2">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.3</div>
+                        <div class="guide-item-content">
+                            <h4>获取应用凭证</h4>
+                            <p>复制 App ID 和 App Secret 到配置</p>
+                            <div class="guide-image-slot" id="guide-img-mac-3">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.4</div>
+                        <div class="guide-item-content">
+                            <h4>发布并启用</h4>
+                            <p>发布应用，在飞书中搜索机器人开始对话</p>
+                            <div class="guide-image-slot" id="guide-img-mac-4">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Windows Card -->
+        <div class="os-card windows hidden" id="windows-card">
+            <div class="detected-badge" id="windows-detected">已检测</div>
+            <div class="os-header">
+                <div class="os-icon windows">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor">
+                        <path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/>
+                    </svg>
+                </div>
+                <div class="os-info">
+                    <h2>Windows</h2>
+                    <p>适用于 Windows 10 及以上版本</p>
+                </div>
+            </div>
+
+            <div class="command-wrapper">
+                <div class="command-label">在 PowerShell (管理员) 中运行</div>
+                <code class="command-text" id="win-cmd">irm https://raw.githubusercontent.com/0xMoat/openclaw-install-helper/main/install.ps1 | iex</code>
+                <button class="copy-btn" onclick="copyCommand('win-cmd', this)" aria-label="复制">📋</button>
+            </div>
+
+            <div class="steps">
+                <div class="step">
+                    <span class="step-num">1</span>
+                    <span class="step-text">右键点击 <strong>开始菜单</strong>，选择「PowerShell (管理员)」</span>
+                </div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <span class="step-text">点击右侧 📋 复制命令，在窗口中粘贴</span>
+                </div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <span class="step-text">按下 <strong>回车</strong>，等待安装完成</span>
+                </div>
+                <div class="step step-feishu">
+                    <span class="step-num">4</span>
+                    <span class="step-text">
+                        前往 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a> 配置 Bot
+                        <button class="expand-guide-btn" onclick="toggleFeishuGuide('win')">查看配置指南 ▼</button>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Feishu Guide for Windows -->
+            <div class="feishu-guide hidden" id="feishu-guide-win">
+                <div class="guide-grid">
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.1</div>
+                        <div class="guide-item-content">
+                            <h4>创建飞书应用</h4>
+                            <p>登录飞书开放平台，创建企业自建应用</p>
+                            <div class="guide-image-slot" id="guide-img-win-1">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.2</div>
+                        <div class="guide-item-content">
+                            <h4>添加机器人能力</h4>
+                            <p>在应用中添加「机器人」能力</p>
+                            <div class="guide-image-slot" id="guide-img-win-2">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.3</div>
+                        <div class="guide-item-content">
+                            <h4>获取应用凭证</h4>
+                            <p>复制 App ID 和 App Secret 到配置</p>
+                            <div class="guide-image-slot" id="guide-img-win-3">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="guide-item">
+                        <div class="guide-item-num">4.4</div>
+                        <div class="guide-item-content">
+                            <h4>发布并启用</h4>
+                            <p>发布应用，在飞书中搜索机器人开始对话</p>
+                            <div class="guide-image-slot" id="guide-img-win-4">
+                                <span>📷 截图占位</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Switch OS -->
+        <div class="switch-os hidden" id="switch-os">
+            <button onclick="switchOS()" id="switch-btn">切换到 Windows 版本</button>
+        </div>
+
+        <footer>
+            <a href="https://github.com/0xMoat/openclaw-install-helper" target="_blank">
+                GitHub →
+            </a>
+        </footer>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">✓ 已复制到剪贴板</div>
+
+    <script>
+        // Detect OS
+        function detectOS() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const platform = navigator.platform.toLowerCase();
+
+            if (platform.includes('mac') || userAgent.includes('mac')) {
+                return 'mac';
+            } else if (platform.includes('win') || userAgent.includes('win')) {
+                return 'windows';
+            }
+            // Default to showing both or mac
+            return 'mac';
+        }
+
+        // Current displayed OS
+        let currentOS = 'mac';
+
+        // Initialize page
+        function init() {
+            const loading = document.getElementById('loading');
+            const macCard = document.getElementById('mac-card');
+            const windowsCard = document.getElementById('windows-card');
+            const switchOS = document.getElementById('switch-os');
+            const macDetected = document.getElementById('mac-detected');
+            const windowsDetected = document.getElementById('windows-detected');
+
+            // Simulate brief loading for effect
+            setTimeout(() => {
+                loading.classList.add('hidden');
+
+                currentOS = detectOS();
+
+                if (currentOS === 'mac') {
+                    macCard.classList.remove('hidden');
+                    macDetected.style.display = 'block';
+                    windowsDetected.style.display = 'none';
+                    document.getElementById('switch-btn').textContent = '切换到 Windows 版本';
+                } else {
+                    windowsCard.classList.remove('hidden');
+                    windowsDetected.style.display = 'block';
+                    macDetected.style.display = 'none';
+                    document.getElementById('switch-btn').textContent = '切换到 macOS 版本';
+                }
+
+                switchOS.classList.remove('hidden');
+            }, 800);
+        }
+
+        // Switch between OS
+        function switchOS() {
+            const macCard = document.getElementById('mac-card');
+            const windowsCard = document.getElementById('windows-card');
+            const switchBtn = document.getElementById('switch-btn');
+            const macDetected = document.getElementById('mac-detected');
+            const windowsDetected = document.getElementById('windows-detected');
+
+            if (currentOS === 'mac') {
+                currentOS = 'windows';
+                macCard.classList.add('hidden');
+                windowsCard.classList.remove('hidden');
+                switchBtn.textContent = '切换到 macOS 版本';
+                // Hide detected badge on non-detected OS
+                windowsDetected.style.display = 'none';
+            } else {
+                currentOS = 'mac';
+                windowsCard.classList.add('hidden');
+                macCard.classList.remove('hidden');
+                switchBtn.textContent = '切换到 Windows 版本';
+                macDetected.style.display = 'none';
+            }
+        }
+
+        // Copy command
+        function copyCommand(id, btn) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = '✓';
+                btn.classList.add('copied');
+
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+
+                setTimeout(() => {
+                    btn.textContent = '📋';
+                    btn.classList.remove('copied');
+                    toast.classList.remove('show');
+                }, 2000);
+            });
+        }
+
+        // Toggle Feishu guide
+        function toggleFeishuGuide(os) {
+            const guide = document.getElementById('feishu-guide-' + os);
+            const btn = guide.previousElementSibling.querySelector('.expand-guide-btn');
+
+            guide.classList.toggle('hidden');
+            btn.classList.toggle('open');
+
+            if (guide.classList.contains('hidden')) {
+                btn.textContent = '查看配置指南 ▼';
+            } else {
+                btn.textContent = '收起配置指南 ▲';
+            }
+        }
+
+        // Run on load
+        init();
+    </script>
+</body>
+</html>
