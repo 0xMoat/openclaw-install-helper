@@ -62,6 +62,86 @@ jobs:
           which pnpm
           which openclaw || echo "openclaw not in PATH yet"
 
+  # 测试完全干净的 macOS 环境（无 Homebrew、无 Node）
+  test-macos-clean:
+    runs-on: macos-latest
+    steps:
+      - name: Download install script (without git clone)
+        run: |
+          # 不用 git checkout，直接下载脚本
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh" -o "install.sh"
+
+      - name: Uninstall Homebrew and Node to simulate clean environment
+        run: |
+          echo "=== Removing Homebrew and Node to simulate clean macOS ==="
+
+          # 卸载 Homebrew（使用官方卸载脚本，自动确认）
+          if [[ -f "/opt/homebrew/bin/brew" ]] || [[ -f "/usr/local/bin/brew" ]]; then
+            echo "Uninstalling Homebrew..."
+            NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/uninstall.sh)" < /dev/null
+
+            # 清理残留文件
+            sudo rm -rf /opt/homebrew /usr/local/Homebrew /usr/local/Caskroom /usr/local/var/homebrew
+            sudo rm -rf /Users/runner/.cache/Homebrew /Users/runner/.homebrew 2>/dev/null || true
+          fi
+
+          # 从 PATH 中移除 Homebrew
+          export PATH=$(echo "$PATH" | sed -E 's|/opt/homebrew/bin:/?|g' | sed -E 's|/opt/homebrew/sbin:/?|g' | sed -E 's|/usr/local/bin:/?|g')
+
+          # 卸载 Node.js（删除 Node 相关文件）
+          echo "Removing Node.js..."
+          sudo rm -rf /opt/homebrew/bin/node /opt/homebrew/bin/npm /usr/local/bin/node /usr/local/bin/npm 2>/dev/null || true
+          sudo rm -rf /usr/local/lib/node_modules /usr/local/include/node 2>/dev/null || true
+          rm -rf ~/.npm ~/.nvm 2>/dev/null || true
+
+          # 从 PATH 中移除 Node
+          export PATH=$(echo "$PATH" | sed -E 's|/opt/homebrew/bin:/?|g' | sed -E 's|/usr/local/bin:/?|g')
+
+          # 验证已移除
+          echo ""
+          echo "Homebrew after removal: $(command -v brew || echo 'not installed - SUCCESS')"
+          echo "Node after removal: $(command -v node || echo 'not installed - SUCCESS')"
+
+      - name: Check initial state (should be clean)
+        run: |
+          echo "=== Initial State (Clean Environment) ==="
+          echo "Homebrew: $(command -v brew || echo 'not installed')"
+          echo "Node: $(command -v node || echo 'not installed')"
+          echo "Git: $(command -v git || echo 'not installed')"
+          echo "pnpm: $(command -v pnpm || echo 'not installed')"
+
+      - name: Run install script
+        run: |
+          chmod +x install.sh
+          ./install.sh
+
+      - name: Verify installation
+        run: |
+          echo "=== Verification ==="
+
+          # 刷新 PATH（GitHub Actions 每个步骤是新会话）
+          if [[ -f "/opt/homebrew/bin/brew" ]]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+          elif [[ -f "/usr/local/bin/brew" ]]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+          fi
+
+          # pnpm 路径
+          export PNPM_HOME="$HOME/Library/pnpm"
+          if [[ -d "$PNPM_HOME" ]]; then
+            export PATH="$PNPM_HOME:$PATH"
+          fi
+
+          # npm 全局路径
+          if [[ -d "$HOME/.npm-global/bin" ]]; then
+            export PATH="$HOME/.npm-global/bin:$PATH"
+          fi
+
+          echo "Git: $(git --version)"
+          echo "Node: $(node --version)"
+          echo "pnpm: $(pnpm --version)"
+          echo "OpenClaw: $(openclaw --version 2>/dev/null || echo 'checking...')"
+
   # 测试有 Git 的 Windows 环境
   test-windows:
     runs-on: windows-latest
