@@ -348,7 +348,7 @@ if [[ "$install_skills" =~ ^[Yy]$ ]]; then
 
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
-    npx add-skill anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx
+    npx skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx
 
     print_success "文件处理技能安装完成"
 
