@@ -667,7 +667,7 @@
         <header>
             <!-- Lobster Mascot -->
             <div class="flying-mascot">
-                <svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <linearGradient id="lobster-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" style="stop-color:#ff6b35"/>
@@ -676,58 +676,74 @@
                         </linearGradient>
                     </defs>
 
-                    <!-- Feishu Paper Plane Logo -->
-                    <g class="paper-plane">
-                        <!-- Bottom shape - Primary Blue #0078D4 (large, base) -->
-                        <path d="M55 105 L55 140 Q90 148 125 125 L125 80 Q90 70 55 105Z" fill="#0078D4"/>
+                    <!-- Feishu Paper Plane Logo - Authentic Design -->
+                    <g class="paper-plane" transform="translate(10, 20)">
+                        <!-- Bottom shape - Primary Blue #0078D4 -->
+                        <!-- Large curved shape, left side vertical, curves up-right -->
+                        <path d="M20 60
+                                 L20 130
+                                 Q80 145 140 110
+                                 L140 50
+                                 Q80 35 20 60Z"
+                              fill="#0078D4"/>
 
-                        <!-- Middle shape - Dark Blue #003B7A (overlay, narrower) -->
-                        <path d="M85 75 Q90 120 110 130 L110 80 Q98 72 85 75Z" fill="#003B7A"/>
+                        <!-- Middle shape - Dark Blue #003B7A -->
+                        <!-- Narrower curve, sits on top of primary shape -->
+                        <path d="M75 35
+                                 Q80 100 120 120
+                                 L120 50
+                                 Q98 40 75 35Z"
+                              fill="#003B7A"/>
 
-                        <!-- Top shape - Teal #00B7A7 (small, top-left accent) -->
-                        <path d="M60 55 Q80 60 85 70 L70 65 Q65 60 60 55Z" fill="#00B7A7"/>
+                        <!-- Top shape - Teal #00B7A7 -->
+                        <!-- Smallest accent, top-left -->
+                        <path d="M35 20
+                                 Q70 28 85 40
+                                 L60 32
+                                 Q48 26 35 20Z"
+                              fill="#00B7A7"/>
 
-                        <!-- Motion lines -->
-                        <path d="M42 145 L22 158" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-                        <path d="M90 148 L90 160" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-                        <path d="M138 145 L158 158" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+                        <!-- Motion lines (flying effect) -->
+                        <path d="M10 145 L-10 170" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+                        <path d="M80 150 L80 175" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
+                        <path d="M150 145 L170 170" stroke="#0078D4" stroke-width="2" stroke-linecap="round" opacity="0.2"/>
                     </g>
 
                     <!-- Lobster sitting on plane -->
-                    <g transform="translate(0, -10)">
-                        <!-- Body (smaller, sitting position) -->
-                        <path class="claw-body" d="M80 22 C58 22 48 38 48 48 C48 63 60 73 70 75 L70 85 L76 85 L76 75 C76 75 80 78 84 75 L84 85 L90 85 L90 75 C102 73 112 63 112 48 C112 38 102 22 80 22Z"/>
+                    <g transform="translate(10, -5)">
+                        <!-- Body -->
+                        <path class="claw-body" d="M85 18 C60 18 48 35 48 45 C48 60 62 70 70 72 L70 82 L76 82 L76 72 C76 72 82 75 88 72 L88 82 L88 72 C105 70 122 60 122 45 C122 30 110 18 85 18Z"/>
 
-                        <!-- Left Claw (holding plane edge) -->
-                        <path class="claw-left" d="M42 42 C35 40 32 44 35 50 C39 54 46 52 50 48 C52 44 48 42 42 42Z"/>
+                        <!-- Left Claw holding plane -->
+                        <path class="claw-left" d="M38 38 C28 35 22 42 28 52 C34 58 42 54 48 48 C52 44 44 40 38 38Z"/>
 
-                        <!-- Right Claw (holding plane edge) -->
-                        <path class="claw-right" d="M118 42 C125 40 128 44 125 50 C121 54 114 52 110 48 C108 44 112 42 118 42Z"/>
+                        <!-- Right Claw holding plane -->
+                        <path class="claw-right" d="M132 38 C142 35 148 42 144 52 C140 58 130 54 122 48 C120 44 128 40 132 38Z"/>
 
                         <!-- Left Eye -->
                         <g class="eye">
-                            <ellipse cx="68" cy="44" rx="6" ry="7" fill="#1a1a1a"/>
-                            <ellipse cx="70" cy="42" rx="2.5" ry="3" fill="#00B7A7" class="eye-glow"/>
+                            <ellipse cx="72" cy="40" rx="7" ry="8" fill="#1a1a1a"/>
+                            <ellipse cx="74" cy="38" rx="3" ry="3.5" fill="#00B7A7" class="eye-glow"/>
                         </g>
 
                         <!-- Right Eye -->
                         <g class="eye">
-                            <ellipse cx="92" cy="44" rx="6" ry="7" fill="#1a1a1a"/>
-                            <ellipse cx="94" cy="42" rx="2.5" ry="3" fill="#00B7A7" class="eye-glow"/>
+                            <ellipse cx="98" cy="40" rx="7" ry="8" fill="#1a1a1a"/>
+                            <ellipse cx="100" cy="38" rx="3" ry="3.5" fill="#00B7A7" class="eye-glow"/>
                         </g>
 
                         <!-- Left Antenna -->
-                        <path class="antenna" d="M63 27 Q50 12 47 17" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <path class="antenna" d="M68 23 Q52 8 48 13" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
 
                         <!-- Right Antenna -->
-                        <path class="antenna" d="M97 27 Q110 12 113 17" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" fill="none"/>
+                        <path class="antenna" d="M102 23 Q118 8 122 13" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round" fill="none"/>
 
-                        <!-- Happy smile -->
-                        <path d="M72 54 Q80 59 88 54" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                        <!-- Smile -->
+                        <path d="M75 50 Q85 55 95 50" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" fill="none"/>
 
-                        <!-- Small legs dangling -->
-                        <path d="M68 75 L65 85" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M92 75 L95 85" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+                        <!-- Legs dangling -->
+                        <path d="M70 72 L66 82" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M100 72 L104 82" stroke="#ff6b35" stroke-width="2.5" stroke-linecap="round"/>
                     </g>
                 </svg>
             </div>
