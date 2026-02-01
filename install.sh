@@ -357,7 +357,7 @@ echo -e "${CYAN}─────────────────────�
 echo ""
 
 print_step "初始化 OpenClaw..."
-openclaw setup --non-interactive < /dev/null
+openclaw setup --non-interactive --accept-risk < /dev/null
 
 print_step "安装网关服务..."
 openclaw gateway install < /dev/null

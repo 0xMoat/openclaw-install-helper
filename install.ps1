@@ -486,7 +486,7 @@ Write-Host "──────────────────────�
 Write-Host ""
 
 Write-Step "初始化 OpenClaw..."
-openclaw setup --non-interactive
+openclaw setup --non-interactive --accept-risk
 
 Write-Step "安装网关服务..."
 openclaw gateway install
