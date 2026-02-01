@@ -78,15 +78,19 @@ select_best_mirror() {
     print_step "测试 GitHub 镜像源可用性..." >&2
 
     local mirrors=(
-        "https://gh-proxy.com/https://github.com/"
-        "https://gitclone.com/github.com/"
-        "https://bgithub.xyz/"
+        "https://ghfast.top/https://github.com/"
+        "https://kkgithub.com/"
+        "https://hub.gitmirror.com/"
+        "https://mirror.ghproxy.com/https://github.com/"
+        "https://gh.qninq.cn/https://github.com/"
     )
 
     local mirror_names=(
-        "gh-proxy.com"
-        "gitclone.com"
-        "bgithub.xyz"
+        "ghfast.top"
+        "kkgithub.com"
+        "gitmirror.com"
+        "ghproxy.com"
+        "gh.qninq.cn"
     )
 
     local available_mirrors=()
@@ -128,17 +132,20 @@ apply_git_mirror() {
 
     # 根据镜像 URL 直接配置对应的 insteadOf
     case "$mirror_url" in
-        *gh-proxy.com*)
-            # gh-proxy.com: https://gh-proxy.com/https://github.com/
-            git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
+        *ghfast.top*)
+            git config --global url."https://ghfast.top/https://github.com/".insteadOf "https://github.com/"
             ;;
-        *gitclone.com*)
-            # gitclone.com: https://gitclone.com/github.com/
-            git config --global url."https://gitclone.com/github.com/".insteadOf "https://github.com/"
+        *kkgithub.com*)
+            git config --global url."https://kkgithub.com/".insteadOf "https://github.com/"
             ;;
-        *bgithub.xyz*)
-            # bgithub.xyz: https://bgithub.xyz/
-            git config --global url."https://bgithub.xyz/".insteadOf "https://github.com/"
+        *gitmirror.com*)
+            git config --global url."https://hub.gitmirror.com/".insteadOf "https://github.com/"
+            ;;
+        *ghproxy.com*)
+            git config --global url."https://mirror.ghproxy.com/https://github.com/".insteadOf "https://github.com/"
+            ;;
+        *gh.qninq.cn*)
+            git config --global url."https://gh.qninq.cn/https://github.com/".insteadOf "https://github.com/"
             ;;
         *)
             git config --global url."$mirror_url".insteadOf "https://github.com/"
@@ -149,10 +156,15 @@ apply_git_mirror() {
 # 清除镜像配置
 remove_git_mirror() {
     # 清除所有可能的镜像配置
-    git config --global --unset url."https://gh-proxy.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://ghfast.top/https://github.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://kkgithub.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://hub.gitmirror.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://mirror.ghproxy.com/https://github.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://gh.qninq.cn/https://github.com/".insteadOf 2>/dev/null || true
+    # 兼容旧配置
+    git config --global --unset url."https://gh-proxy.com/https://github.com/".insteadOf 2>/dev/null || true
     git config --global --unset url."https://gitclone.com/github.com/".insteadOf 2>/dev/null || true
     git config --global --unset url."https://bgithub.xyz/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://hub.fastgit.xyz/".insteadOf 2>/dev/null || true
 }
 
 # ============================================================

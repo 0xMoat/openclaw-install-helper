@@ -152,9 +152,11 @@ function Select-BestMirror {
     Write-Step "测试 GitHub 镜像源可用性..."
 
     $mirrors = @(
-        @{ Url = "https://gh-proxy.com/https://github.com/"; Name = "gh-proxy.com" },
-        @{ Url = "https://gitclone.com/github.com/"; Name = "gitclone.com" },
-        @{ Url = "https://bgithub.xyz/"; Name = "bgithub.xyz" }
+        @{ Url = "https://ghfast.top/https://github.com/"; Name = "ghfast.top" },
+        @{ Url = "https://kkgithub.com/"; Name = "kkgithub.com" },
+        @{ Url = "https://hub.gitmirror.com/"; Name = "gitmirror.com" },
+        @{ Url = "https://mirror.ghproxy.com/https://github.com/"; Name = "ghproxy.com" },
+        @{ Url = "https://gh.qninq.cn/https://github.com/"; Name = "gh.qninq.cn" }
     )
 
     $availableMirrors = @()
@@ -189,12 +191,16 @@ function Apply-GitMirror {
     }
 
     # 根据镜像 URL 直接配置对应的 insteadOf
-    if ($mirrorUrl -like "*gh-proxy.com*") {
-        git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
-    } elseif ($mirrorUrl -like "*gitclone.com*") {
-        git config --global url."https://gitclone.com/github.com/".insteadOf "https://github.com/"
-    } elseif ($mirrorUrl -like "*bgithub.xyz*") {
-        git config --global url."https://bgithub.xyz/".insteadOf "https://github.com/"
+    if ($mirrorUrl -like "*ghfast.top*") {
+        git config --global url."https://ghfast.top/https://github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*kkgithub.com*") {
+        git config --global url."https://kkgithub.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*gitmirror.com*") {
+        git config --global url."https://hub.gitmirror.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*ghproxy.com*") {
+        git config --global url."https://mirror.ghproxy.com/https://github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*gh.qninq.cn*") {
+        git config --global url."https://gh.qninq.cn/https://github.com/".insteadOf "https://github.com/"
     } else {
         git config --global url."$mirrorUrl".insteadOf "https://github.com/"
     }
@@ -204,10 +210,14 @@ function Apply-GitMirror {
 function Remove-GitMirror {
     # 清除所有可能的镜像配置
     @(
+        "url.https://ghfast.top/https://github.com/.insteadOf",
+        "url.https://kkgithub.com/.insteadOf",
+        "url.https://hub.gitmirror.com/.insteadOf",
+        "url.https://mirror.ghproxy.com/https://github.com/.insteadOf",
+        "url.https://gh.qninq.cn/https://github.com/.insteadOf",
         "url.https://gh-proxy.com/https://github.com/.insteadOf",
         "url.https://gitclone.com/github.com/.insteadOf",
-        "url.https://bgithub.xyz/.insteadOf",
-        "url.https://hub.fastgit.xyz/.insteadOf"
+        "url.https://bgithub.xyz/.insteadOf"
     ) | ForEach-Object {
         git config --global --unset $_ 2>$null
     }
