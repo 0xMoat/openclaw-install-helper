@@ -88,12 +88,107 @@ function Download-File {
 }
 
 # ============================================================
+# GitHub 镜像源测速与选择
+# ============================================================
+
+# 测试单个镜像源是否真正可用（通过实际 git 操作）
+# 返回: $true 或 $false
+function Test-MirrorAvailable {
+    param($mirrorUrl)
+
+    try {
+        # 使用 git ls-remote 测试镜像是否真正可用
+        $testUrl = "$mirrorUrlanthropics/skills.git"
+
+        # 设置超时为 10 秒
+        $process = Start-Process -FilePath "git" -ArgumentList "ls-remote", "$testUrl", "HEAD" -NoNewWindow -RedirectStandardOutput "$env:TEMP\git-test-$([guid]::NewGuid()).txt" -RedirectStandardError "$env:TEMP\git-test-err-$([guid]::NewGuid()).txt" -PassThru
+
+        # 等待最多 10 秒
+        if ($process.WaitForExit(10000)) {
+            return ($process.ExitCode -eq 0)
+        } else {
+            $process.Kill()
+            return $false
+        }
+    } catch {
+        return $false
+    }
+}
+
+# 选择可用的 GitHub 镜像源
+# 返回: 镜像 URL 字符串，如果没有可用镜像返回空字符串
+function Select-BestMirror {
+    Write-Step "测试 GitHub 镜像源可用性..."
+
+    $mirrors = @(
+        @{ Url = "https://gh-proxy.com/https://github.com/"; Name = "gh-proxy.com" },
+        @{ Url = "https://gitclone.com/github.com/"; Name = "gitclone.com" },
+        @{ Url = "https://bgithub.xyz/"; Name = "bgithub.xyz" }
+    )
+
+    $availableMirrors = @()
+
+    foreach ($mirror in $mirrors) {
+        Write-Host -NoNewline "  测试 $($mirror.Name) ... "
+
+        if (Test-MirrorAvailable $mirror.Url) {
+            Write-Host "可用" -ForegroundColor Green
+            $availableMirrors += $mirror.Url
+        } else {
+            Write-Host "不可用" -ForegroundColor Red
+        }
+    }
+
+    # 选择第一个可用的镜像（按优先级顺序）
+    if ($availableMirrors.Count -gt 0) {
+        Write-Success "已选择可用镜像源"
+        return $availableMirrors[0]
+    } else {
+        Write-Warning "所有镜像源均不可用，将直接连接 GitHub"
+        return ""
+    }
+}
+
+# 应用镜像配置
+function Apply-GitMirror {
+    param($mirrorUrl)
+
+    if ([string]::IsNullOrEmpty($mirrorUrl)) {
+        return
+    }
+
+    # 根据镜像 URL 直接配置对应的 insteadOf
+    if ($mirrorUrl -like "*gh-proxy.com*") {
+        git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*gitclone.com*") {
+        git config --global url."https://gitclone.com/github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*bgithub.xyz*") {
+        git config --global url."https://bgithub.xyz/".insteadOf "https://github.com/"
+    } else {
+        git config --global url."$mirrorUrl".insteadOf "https://github.com/"
+    }
+}
+
+# 清除镜像配置
+function Remove-GitMirror {
+    # 清除所有可能的镜像配置
+    @(
+        "url.https://gh-proxy.com/https://github.com/.insteadOf",
+        "url.https://gitclone.com/github.com/.insteadOf",
+        "url.https://bgithub.xyz/.insteadOf",
+        "url.https://hub.fastgit.xyz/.insteadOf"
+    ) | ForEach-Object {
+        git config --global --unset $_ 2>$null
+    }
+}
+
+# ============================================================
 # 安装函数
 # ============================================================
 
 # 使用 winget 安装 Git
 function Install-Git-Winget {
-    winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+    winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
 }
 
 # 直接下载安装 Git
@@ -136,7 +231,7 @@ function Install-Git-Direct {
 
 # 使用 winget 安装 Node.js
 function Install-Node-Winget {
-    winget install --id OpenJS.NodeJS.LTS -e --source winget --accept-package-agreements --accept-source-agreements
+    winget install --id OpenJS.NodeJS.LTS -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
 }
 
 # 直接下载安装 Node.js
@@ -310,7 +405,16 @@ if (Test-Command "pnpm") {
 }
 
 # ============================================================
-# 步骤 4: 安装 OpenClaw
+# 步骤 4: 配置 Git 镜像（解决 GitHub 访问问题）
+# ============================================================
+$bestMirror = Select-BestMirror
+Apply-GitMirror $bestMirror
+if (-not [string]::IsNullOrEmpty($bestMirror)) {
+    Write-Success "Git 镜像配置完成"
+}
+
+# ============================================================
+# 步骤 5: 安装 OpenClaw
 # ============================================================
 Write-Step "检查 OpenClaw..."
 
@@ -318,7 +422,9 @@ if (Test-Command "openclaw") {
     Write-Success "OpenClaw 已安装"
 } else {
     Write-Host "正在安装 OpenClaw..." -ForegroundColor Yellow
-    pnpm add -g openclaw
+    Write-Host "提示: 如果安装过程较慢，请耐心等待（首次安装可能需要 5-10 分钟）..." -ForegroundColor Gray
+
+    pnpm add -g openclaw 2>$null
 
     Refresh-Path
 
@@ -326,16 +432,30 @@ if (Test-Command "openclaw") {
         Write-Success "OpenClaw 安装完成"
     } else {
         Write-Err "OpenClaw 安装失败"
+        Write-Host ""
+        Write-Host "如果仍然失败，请尝试以下方法：" -ForegroundColor Yellow
+        Write-Host "1. 使用 VPN 或代理"
+        Write-Host "2. 手动配置 Git 代理："
+        Write-Host "   git config --global http.proxy http://127.0.0.1:7890"
+        Write-Host "   git config --global https.proxy http://127.0.0.1:7890"
+        Write-Host "3. 然后重新运行: pnpm add -g openclaw"
         exit 1
     }
 }
 
 # ============================================================
-# 步骤 5: 安装飞书插件
+# 清理：安装完成后移除 Git 镜像配置（可选）
+# ============================================================
+Write-Step "清理 Git 镜像配置..."
+Remove-GitMirror
+Write-Success "Git 配置已恢复"
+
+# ============================================================
+# 步骤 6: 安装飞书插件
 # ============================================================
 Write-Step "安装飞书插件..."
 
-openclaw plugins install @m1heng-clawd/feishu
+openclaw plugins install @m1heng-clawd/feishu 2>$null
 
 Write-Success "飞书插件安装完成"
 
@@ -411,7 +531,7 @@ if ($env:SKIP_SKILLS -ne "1") {
 
         $installed = $false
         if ($useWinget) {
-            winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements
+            winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
             Refresh-Path
             $installed = Test-Command "python"
         }
@@ -466,7 +586,16 @@ if ($env:SKIP_SKILLS -ne "1") {
 
     # 安装文件处理技能
     Write-Step "安装 PDF, PPT, Excel, Docx 技能..."
-    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g
+
+    # 临时配置 Git 镜像以解决 GitHub 访问问题
+    $skillsMirror = Select-BestMirror
+    Apply-GitMirror $skillsMirror
+
+    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g 2>$null
+
+    # 恢复 Git 配置
+    Remove-GitMirror
+    Write-Success "Git 配置已恢复"
 
     Write-Success "文件处理技能安装完成"
 
@@ -486,13 +615,27 @@ Write-Host "──────────────────────�
 Write-Host ""
 
 Write-Step "初始化 OpenClaw..."
-openclaw setup --non-interactive --accept-risk
+openclaw onboard --non-interactive --accept-risk --skip-daemon 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 
 Write-Step "安装网关服务..."
-openclaw gateway install
+try {
+    openclaw gateway install 2>&1
+    Write-Success "网关服务安装完成"
+} catch {
+    Write-Err "网关服务安装失败"
+    exit 1
+}
 
 Write-Step "启动网关服务..."
-openclaw gateway start
+try {
+    openclaw gateway start 2>&1
+    # 等待服务启动
+    Start-Sleep -Seconds 3
+    Write-Success "网关服务启动完成"
+} catch {
+    Write-Err "网关服务启动失败"
+    exit 1
+}
 
 Write-Success "OpenClaw 初始化完成"
 
@@ -508,7 +651,7 @@ Write-Host "请输入飞书应用的 App ID 和 App Secret"
 Write-Host "（可在飞书开放平台 https://open.feishu.cn 获取）"
 Write-Host ""
 
-# 读取飞书 App ID 和 App Secret
+# 读取飞书 App ID 和 App Secret（明文输入）
 $feishuAppId = ""
 $feishuAppSecret = ""
 
@@ -524,15 +667,15 @@ if ([Environment]::UserInteractive) {
     if ([Console]::IsInputRedirected) {
         $feishuAppSecret = $Host.UI.ReadLine()
     } else {
-        $feishuAppSecret = Read-Host -AsSecureString | ConvertFrom-SecureString -AsPlainText
+        $feishuAppSecret = Read-Host
     }
 }
 
 if ($feishuAppId -and $feishuAppSecret) {
     Write-Step "配置飞书..."
-    openclaw channels add --channel feishu
-    openclaw config set channels.feishu.appId $feishuAppId
-    openclaw config set channels.feishu.appSecret $feishuAppSecret
+    openclaw channels add --channel feishu 2>$null
+    openclaw config set channels.feishu.appId $feishuAppId 2>$null
+    openclaw config set channels.feishu.appSecret $feishuAppSecret 2>$null
     Write-Success "飞书配置完成"
 } else {
     Write-Warning "跳过飞书配置（未输入完整信息）"
@@ -551,7 +694,23 @@ Write-Host "请在浏览器中完成登录授权"
 Write-Host ""
 
 Write-Step "启动 Qwen 认证..."
+
+# 首先启用 qwen-portal-auth plugin
+openclaw plugins enable qwen-portal-auth 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
+
+# 然后进行认证
 openclaw models auth login --provider qwen-portal --set-default
+
+# 复制 auth 配置到主 agent 目录
+$agentAuthPath = "$env:USERPROFILE\.openclaw\agents\main\agent\auth-profiles.json"
+$mainAuthPath = "$env:USERPROFILE\.openclaw\agents\main\auth-profiles.json"
+if (Test-Path $agentAuthPath) {
+    Copy-Item $agentAuthPath $mainAuthPath -Force
+}
+
+# 重启 gateway 使配置生效
+Write-Step "重启网关服务..."
+openclaw gateway restart 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 
 Write-Success "Qwen 认证完成"
 
