@@ -481,9 +481,24 @@ if (Test-Command "openclaw") {
     Write-Success "OpenClaw 已安装"
 } else {
     Write-Host "正在安装 OpenClaw..." -ForegroundColor Yellow
-    Write-Host "提示: 如果安装过程较慢，请耐心等待（首次安装可能需要 5-10 分钟）..." -ForegroundColor Gray
+    Write-Host "提示: 使用淘宝镜像源加速安装..." -ForegroundColor Gray
+
+    # 保存原来的 registry 设置
+    $originalRegistry = npm config get registry 2>$null
+    
+    # 设置淘宝镜像源
+    npm config set registry https://registry.npmmirror.com 2>$null
+    Write-Host "  已切换到淘宝 npm 镜像源" -ForegroundColor Gray
 
     npm install -g openclaw 2>$null
+
+    # 恢复原来的 registry 设置
+    if ($originalRegistry -and $originalRegistry -ne "undefined") {
+        npm config set registry $originalRegistry 2>$null
+    } else {
+        npm config set registry https://registry.npmjs.org 2>$null
+    }
+    Write-Host "  已恢复 npm 源设置" -ForegroundColor Gray
 
     Refresh-Path
 

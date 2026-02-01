@@ -300,9 +300,24 @@ if command_exists openclaw; then
     print_success "OpenClaw 已安装"
 else
     echo "正在安装 OpenClaw..."
-    echo "提示: 如果安装过程较慢，请耐心等待（首次安装可能需要 5-10 分钟）..."
+    echo "提示: 使用淘宝镜像源加速安装..."
+
+    # 保存原来的 registry 设置
+    original_registry=$(npm config get registry 2>/dev/null || echo "")
+    
+    # 设置淘宝镜像源
+    npm config set registry https://registry.npmmirror.com
+    echo "  已切换到淘宝 npm 镜像源"
 
     npm install -g openclaw < /dev/null
+
+    # 恢复原来的 registry 设置
+    if [[ -n "$original_registry" && "$original_registry" != "undefined" ]]; then
+        npm config set registry "$original_registry"
+    else
+        npm config set registry https://registry.npmjs.org
+    fi
+    echo "  已恢复 npm 源设置"
 
     refresh_path
 
