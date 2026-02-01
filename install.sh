@@ -73,29 +73,33 @@ command_exists() {
 }
 
 # ============================================================
-# GitHub 镜像源测速与选择
+# GitHub 镜像源测速与选择（并发测试）
 # ============================================================
 
-# 测试单个镜像源是否真正可用（通过实际 git 操作）
-# 返回: "success" 或 "fail"
-test_mirror_available() {
+# 测试单个镜像源并记录响应时间
+# 参数: mirror_url output_file
+# 输出: 将结果写入 output_file
+test_mirror_with_timing() {
     local mirror_url="$1"
-
-    # 使用 git ls-remote 测试镜像是否真正可用
-    # 测试一个公开的小仓库
+    local output_file="$2"
+    local name="$3"
+    
     local test_url="${mirror_url}anthropics/skills.git"
-
+    local start_time=$(date +%s%3N 2>/dev/null || date +%s)
+    
     if timeout 10 git ls-remote "$test_url" HEAD &> /dev/null; then
-        echo "success"
+        local end_time=$(date +%s%3N 2>/dev/null || date +%s)
+        local elapsed=$((end_time - start_time))
+        echo "${elapsed}|${mirror_url}|${name}" > "$output_file"
     else
-        echo "fail"
+        echo "failed|${mirror_url}|${name}" > "$output_file"
     fi
 }
 
-# 选择最快的可用 GitHub 镜像源
+# 并发选择最快的可用 GitHub 镜像源
 # 返回: 最佳镜像 URL，如果没有可用镜像返回空字符串
 select_best_mirror() {
-    print_step "测试 GitHub 镜像源可用性..." >&2
+    print_step "并发测试 GitHub 镜像源..." >&2
 
     local mirrors=(
         "https://ghfast.top/https://github.com/"
@@ -119,29 +123,68 @@ select_best_mirror() {
         "gh-proxy.com"
     )
 
-    local available_mirrors=()
+    # 创建临时目录存放测试结果
+    local tmp_dir=$(mktemp -d)
+    local pids=()
 
+    # 并发启动所有测试
+    echo "  正在并发测试 ${#mirrors[@]} 个镜像源..." >&2
     for i in "${!mirrors[@]}"; do
         local mirror="${mirrors[$i]}"
         local name="${mirror_names[$i]}"
+        test_mirror_with_timing "$mirror" "$tmp_dir/result_$i" "$name" &
+        pids+=($!)
+    done
 
-        echo -n "  测试 $name ... " >&2
+    # 等待所有测试完成（最多等待 12 秒）
+    local wait_count=0
+    while [[ $wait_count -lt 24 ]]; do
+        local all_done=true
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                all_done=false
+                break
+            fi
+        done
+        if $all_done; then
+            break
+        fi
+        sleep 0.5
+        ((wait_count++))
+    done
 
-        local result
-        result=$(test_mirror_available "$mirror")
-
-        if [[ "$result" == "success" ]]; then
-            echo -e "${GREEN}可用${NC}" >&2
-            available_mirrors+=("$mirror")
-        else
-            echo -e "${RED}不可用${NC}" >&2
+    # 收集结果并排序
+    local results=()
+    for i in "${!mirrors[@]}"; do
+        local result_file="$tmp_dir/result_$i"
+        if [[ -f "$result_file" ]]; then
+            local content=$(cat "$result_file")
+            local timing=$(echo "$content" | cut -d'|' -f1)
+            local url=$(echo "$content" | cut -d'|' -f2)
+            local name=$(echo "$content" | cut -d'|' -f3)
+            
+            if [[ "$timing" != "failed" ]]; then
+                echo -e "  ${name}: ${GREEN}${timing}ms${NC}" >&2
+                results+=("$timing|$url|$name")
+            else
+                echo -e "  ${name}: ${RED}不可用${NC}" >&2
+            fi
         fi
     done
 
-    # 选择第一个可用的镜像（按优先级顺序）
-    if [[ ${#available_mirrors[@]} -gt 0 ]]; then
-        print_success "已选择可用镜像源" >&2
-        echo "${available_mirrors[0]}"
+    # 清理临时文件
+    rm -rf "$tmp_dir"
+
+    # 按响应时间排序，选择最快的
+    if [[ ${#results[@]} -gt 0 ]]; then
+        # 使用 sort 按数字排序
+        local best=$(printf '%s\n' "${results[@]}" | sort -t'|' -k1 -n | head -1)
+        local best_url=$(echo "$best" | cut -d'|' -f2)
+        local best_name=$(echo "$best" | cut -d'|' -f3)
+        local best_time=$(echo "$best" | cut -d'|' -f1)
+        
+        print_success "已选择最快镜像源: $best_name (${best_time}ms)" >&2
+        echo "$best_url"
     else
         print_warning "所有镜像源均不可用，将直接连接 GitHub" >&2
         echo ""

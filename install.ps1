@@ -152,35 +152,14 @@ function Download-File {
 # ============================================================
 # GitHub 镜像源测速与选择
 # ============================================================
+# ============================================================
+# GitHub 镜像源测速与选择（并发测试）
+# ============================================================
 
-# 测试单个镜像源是否真正可用（通过实际 git 操作）
-# 返回: $true 或 $false
-function Test-MirrorAvailable {
-    param($mirrorUrl)
-
-    try {
-        # 使用 git ls-remote 测试镜像是否真正可用
-        $testUrl = "${mirrorUrl}anthropics/skills.git"
-
-        # 设置超时为 10 秒
-        $process = Start-Process -FilePath "git" -ArgumentList "ls-remote", "$testUrl", "HEAD" -NoNewWindow -RedirectStandardOutput "$env:TEMP\git-test-$([guid]::NewGuid()).txt" -RedirectStandardError "$env:TEMP\git-test-err-$([guid]::NewGuid()).txt" -PassThru
-
-        # 等待最多 10 秒
-        if ($process.WaitForExit(10000)) {
-            return ($process.ExitCode -eq 0)
-        } else {
-            $process.Kill()
-            return $false
-        }
-    } catch {
-        return $false
-    }
-}
-
-# 选择可用的 GitHub 镜像源
+# 并发选择最快的可用 GitHub 镜像源
 # 返回: 镜像 URL 字符串，如果没有可用镜像返回空字符串
 function Select-BestMirror {
-    Write-Step "测试 GitHub 镜像源可用性..."
+    Write-Step "并发测试 GitHub 镜像源..."
 
     $mirrors = @(
         @{ Url = "https://ghfast.top/https://github.com/"; Name = "ghfast.top" },
@@ -193,23 +172,102 @@ function Select-BestMirror {
         @{ Url = "https://gh-proxy.com/https://github.com/"; Name = "gh-proxy.com" }
     )
 
-    $availableMirrors = @()
+    Write-Host "  正在并发测试 $($mirrors.Count) 个镜像源..." -ForegroundColor Gray
 
-    foreach ($mirror in $mirrors) {
-        Write-Host -NoNewline "  测试 $($mirror.Name) ... "
-
-        if (Test-MirrorAvailable $mirror.Url) {
-            Write-Host "可用" -ForegroundColor Green
-            $availableMirrors += $mirror.Url
-        } else {
-            Write-Host "不可用" -ForegroundColor Red
+    # 测试脚本块
+    $testScript = {
+        param($mirrorUrl, $mirrorName)
+        try {
+            $testUrl = "${mirrorUrl}anthropics/skills.git"
+            $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+            
+            $process = Start-Process -FilePath "git" -ArgumentList "ls-remote", "$testUrl", "HEAD" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "NUL" -RedirectStandardError "NUL"
+            
+            $stopwatch.Stop()
+            
+            if ($process.ExitCode -eq 0) {
+                return @{
+                    Success = $true
+                    Time = $stopwatch.ElapsedMilliseconds
+                    Url = $mirrorUrl
+                    Name = $mirrorName
+                }
+            } else {
+                return @{
+                    Success = $false
+                    Time = -1
+                    Url = $mirrorUrl
+                    Name = $mirrorName
+                }
+            }
+        } catch {
+            return @{
+                Success = $false
+                Time = -1
+                Url = $mirrorUrl
+                Name = $mirrorName
+            }
         }
     }
 
-    # 选择第一个可用的镜像（按优先级顺序）
-    if ($availableMirrors.Count -gt 0) {
-        Write-Success "已选择可用镜像源"
-        return $availableMirrors[0]
+    # 创建并发任务
+    $runspacePool = [runspacefactory]::CreateRunspacePool(1, $mirrors.Count)
+    $runspacePool.Open()
+    
+    $jobs = @()
+    foreach ($mirror in $mirrors) {
+        $powershell = [powershell]::Create().AddScript($testScript).AddArgument($mirror.Url).AddArgument($mirror.Name)
+        $powershell.RunspacePool = $runspacePool
+        $jobs += @{
+            PowerShell = $powershell
+            Handle = $powershell.BeginInvoke()
+            Mirror = $mirror
+        }
+    }
+
+    # 等待所有任务完成（最多 15 秒）
+    $timeout = [DateTime]::Now.AddSeconds(15)
+    while ($jobs | Where-Object { -not $_.Handle.IsCompleted }) {
+        if ([DateTime]::Now -gt $timeout) {
+            break
+        }
+        Start-Sleep -Milliseconds 100
+    }
+
+    # 收集结果
+    $results = @()
+    foreach ($job in $jobs) {
+        try {
+            if ($job.Handle.IsCompleted) {
+                $result = $job.PowerShell.EndInvoke($job.Handle)
+                if ($result -and $result.Success) {
+                    Write-Host "  $($result.Name): " -NoNewline
+                    Write-Host "$($result.Time)ms" -ForegroundColor Green
+                    $results += $result
+                } else {
+                    Write-Host "  $($job.Mirror.Name): " -NoNewline
+                    Write-Host "不可用" -ForegroundColor Red
+                }
+            } else {
+                Write-Host "  $($job.Mirror.Name): " -NoNewline
+                Write-Host "超时" -ForegroundColor Red
+            }
+        } catch {
+            Write-Host "  $($job.Mirror.Name): " -NoNewline
+            Write-Host "错误" -ForegroundColor Red
+        } finally {
+            $job.PowerShell.Dispose()
+        }
+    }
+
+    $runspacePool.Close()
+    $runspacePool.Dispose()
+
+    # 按响应时间排序，选择最快的
+    if ($results.Count -gt 0) {
+        $best = $results | Sort-Object { $_.Time } | Select-Object -First 1
+        Write-Success "已选择最快镜像源: $($best.Name) ($($best.Time)ms)"
+        return $best.Url
     } else {
         Write-Warning "所有镜像源均不可用，将直接连接 GitHub"
         return ""
