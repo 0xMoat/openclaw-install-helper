@@ -31,8 +31,11 @@ function Refresh-Path {
     $extraPaths = @(
         "$env:ProgramFiles\Git\cmd",
         "$env:ProgramFiles\nodejs",
+        "${env:ProgramFiles(x86)}\nodejs",
         "$env:LOCALAPPDATA\pnpm",
-        "$env:APPDATA\npm"
+        "$env:APPDATA\npm",
+        "$env:ProgramData\chocolatey\bin",
+        "$env:ChocolateyInstall\bin"
     )
     foreach ($p in $extraPaths) {
         if ((Test-Path $p) -and ($env:Path -notlike "*$p*")) {
@@ -534,6 +537,28 @@ Write-Success "Git 配置已恢复"
 # 步骤 6: 安装飞书插件
 # ============================================================
 Write-Step "安装飞书插件..."
+
+# 刷新 PATH 确保 npm 可用（OpenClaw 插件安装依赖 npm）
+Refresh-Path
+
+# 检查 npm 是否可用
+if (-not (Test-Command "npm")) {
+    Write-Warning "npm 未找到，尝试定位..."
+    # 尝试找到 npm 的位置
+    $npmPaths = @(
+        "$env:ProgramFiles\nodejs\npm.cmd",
+        "${env:ProgramFiles(x86)}\nodejs\npm.cmd",
+        "$env:APPDATA\npm\npm.cmd"
+    )
+    foreach ($npmPath in $npmPaths) {
+        if (Test-Path $npmPath) {
+            $npmDir = Split-Path $npmPath -Parent
+            $env:Path = "$npmDir;$env:Path"
+            Write-Host "  已添加 npm 路径: $npmDir" -ForegroundColor Gray
+            break
+        }
+    }
+}
 
 openclaw plugins install @m1heng-clawd/feishu 2>$null
 
