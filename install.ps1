@@ -518,48 +518,81 @@ openclaw gateway start
 Write-Success "OpenClaw 初始化完成"
 
 # ============================================================
-# 打印配置指引
+# 配置飞书 Channel
+# ============================================================
+Write-Host ""
+Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "配置飞书机器人" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "请输入飞书应用的 App ID 和 App Secret"
+Write-Host "（可在飞书开放平台 https://open.feishu.cn 获取）"
+Write-Host ""
+
+# 读取飞书 App ID 和 App Secret
+$feishuAppId = ""
+$feishuAppSecret = ""
+
+if ([Environment]::UserInteractive) {
+    Write-Host -NoNewline "飞书 App ID: "
+    if ([Console]::IsInputRedirected) {
+        $feishuAppId = $Host.UI.ReadLine()
+    } else {
+        $feishuAppId = Read-Host
+    }
+
+    Write-Host -NoNewline "飞书 App Secret: "
+    if ([Console]::IsInputRedirected) {
+        $feishuAppSecret = $Host.UI.ReadLine()
+    } else {
+        $feishuAppSecret = Read-Host -AsSecureString | ConvertFrom-SecureString -AsPlainText
+    }
+}
+
+if ($feishuAppId -and $feishuAppSecret) {
+    Write-Step "配置飞书..."
+    openclaw channels add --channel feishu
+    openclaw config set channels.feishu.appId $feishuAppId
+    openclaw config set channels.feishu.appSecret $feishuAppSecret
+    Write-Success "飞书配置完成"
+} else {
+    Write-Warning "跳过飞书配置（未输入完整信息）"
+}
+
+# ============================================================
+# 配置 Qwen AI 模型
+# ============================================================
+Write-Host ""
+Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "配置 AI 模型 (Qwen)" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "即将打开浏览器进行 Qwen 授权..."
+Write-Host "请在浏览器中完成登录授权"
+Write-Host ""
+
+Write-Step "启动 Qwen 认证..."
+openclaw models auth login --provider qwen-portal --set-default
+
+Write-Success "Qwen 认证完成"
+
+# ============================================================
+# 完成
 # ============================================================
 Write-Host ""
 Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
 Write-Host ""
 Write-Host ""
 Write-Host "  ╔═══════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "  ║                   还差一步就完成了!                   ║" -ForegroundColor Green
+Write-Host "  ║                     配置完成!                         ║" -ForegroundColor Green
 Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ║  请执行以下命令完成配置:                              ║" -ForegroundColor Green
+Write-Host "  ║  OpenClaw 已准备就绪!                                 ║" -ForegroundColor Green
+Write-Host "  ║                                                       ║" -ForegroundColor Green
+Write-Host "  ║  常用命令:                                            ║" -ForegroundColor Green
+Write-Host "  ║    openclaw status    - 查看状态                      ║" -ForegroundColor Green
+Write-Host "  ║    openclaw dashboard - 打开控制面板                  ║" -ForegroundColor Green
+Write-Host "  ║    openclaw doctor    - 健康检查                      ║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
-Write-Host ""
-
-Write-Host "1. 配置 AI 模型 (选择一个):" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "   # Anthropic Claude"
-Write-Host "   echo `"你的API密钥`" | openclaw models auth paste-token --provider anthropic" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "   # OpenAI"
-Write-Host "   echo `"你的API密钥`" | openclaw models auth paste-token --provider openai" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "   # OpenRouter (支持多种模型)"
-Write-Host "   echo `"你的API密钥`" | openclaw models auth paste-token --provider openrouter" -ForegroundColor Cyan
-Write-Host ""
-
-Write-Host "2. 配置消息渠道 (选择需要的):" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "   # 飞书"
-Write-Host "   openclaw channels add --channel feishu" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "   # Telegram"
-Write-Host "   openclaw channels add --channel telegram --token 你的Bot_Token" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "   # WhatsApp"
-Write-Host "   openclaw channels login --channel whatsapp" -ForegroundColor Cyan
-Write-Host ""
-
-Write-Host "3. 查看状态:" -ForegroundColor Yellow
-Write-Host "   openclaw status" -ForegroundColor Cyan
-Write-Host ""
-
-Write-Host "配置完成后，就可以开始使用 OpenClaw 了!" -ForegroundColor Green
 Write-Host ""

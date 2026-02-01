@@ -387,7 +387,62 @@ openclaw gateway start
 print_success "OpenClaw 初始化完成"
 
 # ============================================================
-# 打印配置指引
+# 配置飞书 Channel
+# ============================================================
+echo ""
+echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
+echo ""
+echo -e "${YELLOW}配置飞书机器人${NC}"
+echo ""
+echo "请输入飞书应用的 App ID 和 App Secret"
+echo "（可在飞书开放平台 https://open.feishu.cn 获取）"
+echo ""
+
+# 读取飞书 App ID
+if [[ -t 0 ]]; then
+    read -p "飞书 App ID: " feishu_app_id
+elif [[ -e /dev/tty ]]; then
+    read -p "飞书 App ID: " feishu_app_id < /dev/tty
+fi
+
+# 读取飞书 App Secret
+if [[ -t 0 ]]; then
+    read -s -p "飞书 App Secret: " feishu_app_secret
+    echo ""
+elif [[ -e /dev/tty ]]; then
+    read -s -p "飞书 App Secret: " feishu_app_secret < /dev/tty
+    echo ""
+fi
+
+if [[ -n "$feishu_app_id" && -n "$feishu_app_secret" ]]; then
+    print_step "配置飞书..."
+    openclaw channels add --channel feishu
+    openclaw config set channels.feishu.appId "$feishu_app_id"
+    openclaw config set channels.feishu.appSecret "$feishu_app_secret"
+    print_success "飞书配置完成"
+else
+    print_warning "跳过飞书配置（未输入完整信息）"
+fi
+
+# ============================================================
+# 配置 Qwen AI 模型
+# ============================================================
+echo ""
+echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
+echo ""
+echo -e "${YELLOW}配置 AI 模型 (Qwen)${NC}"
+echo ""
+echo "即将打开浏览器进行 Qwen 授权..."
+echo "请在浏览器中完成登录授权"
+echo ""
+
+print_step "启动 Qwen 认证..."
+openclaw models auth login --provider qwen-portal --set-default
+
+print_success "Qwen 认证完成"
+
+# ============================================================
+# 完成
 # ============================================================
 echo ""
 echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
@@ -395,42 +450,16 @@ echo ""
 echo -e "${GREEN}"
 cat << 'EOF'
   ╔═══════════════════════════════════════════════════════╗
-  ║                   还差一步就完成了!                   ║
+  ║                     配置完成!                         ║
   ╠═══════════════════════════════════════════════════════╣
   ║                                                       ║
-  ║  请执行以下命令完成配置:                              ║
+  ║  OpenClaw 已准备就绪!                                 ║
+  ║                                                       ║
+  ║  常用命令:                                            ║
+  ║    openclaw status    - 查看状态                      ║
+  ║    openclaw dashboard - 打开控制面板                  ║
+  ║    openclaw doctor    - 健康检查                      ║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
-
-echo -e "${YELLOW}1. 配置 AI 模型 (选择一个):${NC}"
-echo ""
-echo "   # Anthropic Claude"
-echo -e "   ${CYAN}echo \"你的API密钥\" | openclaw models auth paste-token --provider anthropic${NC}"
-echo ""
-echo "   # OpenAI"
-echo -e "   ${CYAN}echo \"你的API密钥\" | openclaw models auth paste-token --provider openai${NC}"
-echo ""
-echo "   # OpenRouter (支持多种模型)"
-echo -e "   ${CYAN}echo \"你的API密钥\" | openclaw models auth paste-token --provider openrouter${NC}"
-echo ""
-
-echo -e "${YELLOW}2. 配置消息渠道 (选择需要的):${NC}"
-echo ""
-echo "   # 飞书"
-echo -e "   ${CYAN}openclaw channels add --channel feishu${NC}"
-echo ""
-echo "   # Telegram"
-echo -e "   ${CYAN}openclaw channels add --channel telegram --token 你的Bot_Token${NC}"
-echo ""
-echo "   # WhatsApp"
-echo -e "   ${CYAN}openclaw channels login --channel whatsapp${NC}"
-echo ""
-
-echo -e "${YELLOW}3. 查看状态:${NC}"
-echo -e "   ${CYAN}openclaw status${NC}"
-echo ""
-
-echo -e "${GREEN}配置完成后，就可以开始使用 OpenClaw 了!${NC}"
-echo ""
