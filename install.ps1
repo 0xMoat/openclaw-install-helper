@@ -382,8 +382,21 @@ if (Test-Command "pnpm") {
 } else {
     Write-Host "正在安装 pnpm..." -ForegroundColor Yellow
 
-    # 使用官方推荐的安装方式（不依赖 winget）
-    Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expression
+    $installed = $false
+
+    # 优先使用 winget 安装（更快，不依赖 GitHub）
+    if ($useWinget) {
+        winget install --id pnpm.pnpm -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
+        Refresh-Path
+        $installed = Test-Command "pnpm"
+    }
+
+    # 如果 winget 安装失败，使用官方脚本
+    if (-not $installed) {
+        if ($useWinget) { Write-Warning "winget 安装失败，尝试使用官方脚本..." }
+        Write-Host "  从 GitHub 下载 pnpm（可能较慢）..." -ForegroundColor Gray
+        Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expression
+    }
 
     # pnpm 安装后需要设置 PATH
     $pnpmHome = "$env:LOCALAPPDATA\pnpm"
