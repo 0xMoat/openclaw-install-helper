@@ -498,3 +498,68 @@ if ($installSkills) {
     Write-Host "  - pptx (PowerPoint 文件处理)"
     Write-Host "  - docx (Word 文件处理)"
 }
+
+# ============================================================
+# 自动初始化 OpenClaw
+# ============================================================
+Write-Host ""
+Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Step "初始化 OpenClaw..."
+openclaw setup --non-interactive
+
+Write-Step "安装网关服务..."
+openclaw gateway install
+
+Write-Step "启动网关服务..."
+openclaw gateway start
+
+Write-Success "OpenClaw 初始化完成"
+
+# ============================================================
+# 打印配置指引
+# ============================================================
+Write-Host ""
+Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
+Write-Host ""
+Write-Host ""
+Write-Host "  ╔═══════════════════════════════════════════════════════╗" -ForegroundColor Green
+Write-Host "  ║                   还差一步就完成了!                   ║" -ForegroundColor Green
+Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
+Write-Host "  ║                                                       ║" -ForegroundColor Green
+Write-Host "  ║  请执行以下命令完成配置:                              ║" -ForegroundColor Green
+Write-Host "  ║                                                       ║" -ForegroundColor Green
+Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
+Write-Host ""
+
+Write-Host "1. 配置 AI 模型 (选择一个):" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "   # Anthropic Claude"
+Write-Host "   echo `"你的API密钥`" | openclaw models auth paste-token --provider anthropic" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   # OpenAI"
+Write-Host "   echo `"你的API密钥`" | openclaw models auth paste-token --provider openai" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   # OpenRouter (支持多种模型)"
+Write-Host "   echo `"你的API密钥`" | openclaw models auth paste-token --provider openrouter" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "2. 配置消息渠道 (选择需要的):" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "   # 飞书"
+Write-Host "   openclaw channels add --channel feishu" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   # Telegram"
+Write-Host "   openclaw channels add --channel telegram --token 你的Bot_Token" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "   # WhatsApp"
+Write-Host "   openclaw channels login --channel whatsapp" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "3. 查看状态:" -ForegroundColor Yellow
+Write-Host "   openclaw status" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "配置完成后，就可以开始使用 OpenClaw 了!" -ForegroundColor Green
+Write-Host ""

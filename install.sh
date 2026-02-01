@@ -367,3 +367,70 @@ if [[ "$install_skills" =~ ^[Yy]$ ]]; then
     echo "  - pptx (PowerPoint 文件处理)"
     echo "  - docx (Word 文件处理)"
 fi
+
+# ============================================================
+# 自动初始化 OpenClaw
+# ============================================================
+echo ""
+echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
+echo ""
+
+print_step "初始化 OpenClaw..."
+openclaw setup --non-interactive
+
+print_step "安装网关服务..."
+openclaw gateway install
+
+print_step "启动网关服务..."
+openclaw gateway start
+
+print_success "OpenClaw 初始化完成"
+
+# ============================================================
+# 打印配置指引
+# ============================================================
+echo ""
+echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
+echo ""
+echo -e "${GREEN}"
+cat << 'EOF'
+  ╔═══════════════════════════════════════════════════════╗
+  ║                   还差一步就完成了!                   ║
+  ╠═══════════════════════════════════════════════════════╣
+  ║                                                       ║
+  ║  请执行以下命令完成配置:                              ║
+  ║                                                       ║
+  ╚═══════════════════════════════════════════════════════╝
+EOF
+echo -e "${NC}"
+
+echo -e "${YELLOW}1. 配置 AI 模型 (选择一个):${NC}"
+echo ""
+echo "   # Anthropic Claude"
+echo -e "   ${CYAN}echo \"你的API密钥\" | openclaw models auth paste-token --provider anthropic${NC}"
+echo ""
+echo "   # OpenAI"
+echo -e "   ${CYAN}echo \"你的API密钥\" | openclaw models auth paste-token --provider openai${NC}"
+echo ""
+echo "   # OpenRouter (支持多种模型)"
+echo -e "   ${CYAN}echo \"你的API密钥\" | openclaw models auth paste-token --provider openrouter${NC}"
+echo ""
+
+echo -e "${YELLOW}2. 配置消息渠道 (选择需要的):${NC}"
+echo ""
+echo "   # 飞书"
+echo -e "   ${CYAN}openclaw channels add --channel feishu${NC}"
+echo ""
+echo "   # Telegram"
+echo -e "   ${CYAN}openclaw channels add --channel telegram --token 你的Bot_Token${NC}"
+echo ""
+echo "   # WhatsApp"
+echo -e "   ${CYAN}openclaw channels login --channel whatsapp${NC}"
+echo ""
+
+echo -e "${YELLOW}3. 查看状态:${NC}"
+echo -e "   ${CYAN}openclaw status${NC}"
+echo ""
+
+echo -e "${GREEN}配置完成后，就可以开始使用 OpenClaw 了!${NC}"
+echo ""
