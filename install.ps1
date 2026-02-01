@@ -98,7 +98,7 @@ function Test-MirrorAvailable {
 
     try {
         # 使用 git ls-remote 测试镜像是否真正可用
-        $testUrl = "$mirrorUrlanthropics/skills.git"
+        $testUrl = "${mirrorUrl}anthropics/skills.git"
 
         # 设置超时为 10 秒
         $process = Start-Process -FilePath "git" -ArgumentList "ls-remote", "$testUrl", "HEAD" -NoNewWindow -RedirectStandardOutput "$env:TEMP\git-test-$([guid]::NewGuid()).txt" -RedirectStandardError "$env:TEMP\git-test-err-$([guid]::NewGuid()).txt" -PassThru
@@ -486,7 +486,8 @@ Write-Host "已安装版本:" -ForegroundColor Cyan
 Write-Host "  Git:      $(git --version)"
 Write-Host "  Node.js:  $(node --version)"
 Write-Host "  pnpm:     v$(pnpm --version)"
-Write-Host "  OpenClaw: $(openclaw --version 2>$null || echo '已安装')"
+$openclawVer = (openclaw --version 2>$null)
+Write-Host "  OpenClaw: $(if ($openclawVer) { $openclawVer } else { '已安装' })"
 
 # ============================================================
 # 安装文件处理技能
