@@ -277,33 +277,14 @@ echo "  pnpm:     v$(pnpm --version)"
 echo "  OpenClaw: $(openclaw --version 2>/dev/null || echo '已安装')"
 
 # ============================================================
-# 可选: 安装文件处理技能
+# 安装文件处理技能
 # ============================================================
 echo ""
 echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
 echo ""
 
-# 检查是否通过环境变量指定（CI 模式）
-if [[ -n "${INSTALL_SKILLS:-}" ]]; then
-    install_skills="$INSTALL_SKILLS"
-elif [[ -t 0 ]]; then
-    # stdin 是终端：直接询问
-    echo -e "${YELLOW}是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？${NC}"
-    echo "这将安装 Python 3.12 和相关技能包"
-    echo ""
-    read -p "安装文件处理技能? (y/N): " install_skills
-elif [[ -e /dev/tty ]]; then
-    # 管道模式但有终端可用：通过 /dev/tty 询问
-    echo -e "${YELLOW}是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？${NC}"
-    echo "这将安装 Python 3.12 和相关技能包"
-    echo ""
-    read -p "安装文件处理技能? (y/N): " install_skills < /dev/tty
-else
-    # 完全非交互模式：默认不安装
-    install_skills="n"
-fi
-
-if [[ "$install_skills" =~ ^[Yy]$ ]]; then
+# 默认安装文件处理技能（可通过 SKIP_SKILLS=1 跳过）
+if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
     print_step "安装文件处理技能..."
 
     # 检查并安装 Python 3.12

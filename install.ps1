@@ -369,35 +369,14 @@ Write-Host "  pnpm:     v$(pnpm --version)"
 Write-Host "  OpenClaw: $(openclaw --version 2>$null || echo '已安装')"
 
 # ============================================================
-# 可选: 安装文件处理技能
+# 安装文件处理技能
 # ============================================================
 Write-Host ""
 Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
 Write-Host ""
 
-# 检查是否通过环境变量指定（CI 模式）
-$installSkills = $false
-
-if ($env:INSTALL_SKILLS) {
-    $installSkills = $env:INSTALL_SKILLS -eq 'y'
-} elseif ([Environment]::UserInteractive) {
-    # 有用户交互环境：询问用户
-    Write-Host "是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？" -ForegroundColor Yellow
-    Write-Host "这将安装 Python 3.12 和相关技能包"
-    Write-Host ""
-    Write-Host -NoNewline "安装文件处理技能? (y/N): "
-
-    if ([Console]::IsInputRedirected) {
-        # 管道模式：通过 $Host.UI 直接从控制台读取
-        $response = $Host.UI.ReadLine()
-    } else {
-        # 正常模式：使用 Read-Host
-        $response = Read-Host
-    }
-    $installSkills = $response -match '^[Yy]$'
-}
-
-if ($installSkills) {
+# 默认安装文件处理技能（可通过 SKIP_SKILLS=1 跳过）
+if ($env:SKIP_SKILLS -ne "1") {
     Write-Step "安装文件处理技能..."
 
     # 检查并安装 Python 3.12
