@@ -337,7 +337,7 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
 
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
-    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g
+    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
 
     print_success "文件处理技能安装完成"
 
@@ -357,13 +357,13 @@ echo -e "${CYAN}─────────────────────�
 echo ""
 
 print_step "初始化 OpenClaw..."
-openclaw setup --non-interactive
+openclaw setup --non-interactive < /dev/null
 
 print_step "安装网关服务..."
-openclaw gateway install
+openclaw gateway install < /dev/null
 
 print_step "启动网关服务..."
-openclaw gateway start
+openclaw gateway start < /dev/null
 
 print_success "OpenClaw 初始化完成"
 
@@ -397,9 +397,9 @@ fi
 
 if [[ -n "$feishu_app_id" && -n "$feishu_app_secret" ]]; then
     print_step "配置飞书..."
-    openclaw channels add --channel feishu
-    openclaw config set channels.feishu.appId "$feishu_app_id"
-    openclaw config set channels.feishu.appSecret "$feishu_app_secret"
+    openclaw channels add --channel feishu < /dev/null
+    openclaw config set channels.feishu.appId "$feishu_app_id" < /dev/null
+    openclaw config set channels.feishu.appSecret "$feishu_app_secret" < /dev/null
     print_success "飞书配置完成"
 else
     print_warning "跳过飞书配置（未输入完整信息）"
@@ -418,7 +418,7 @@ echo "请在浏览器中完成登录授权"
 echo ""
 
 print_step "启动 Qwen 认证..."
-openclaw models auth login --provider qwen-portal --set-default
+openclaw models auth login --provider qwen-portal --set-default < /dev/tty
 
 print_success "Qwen 认证完成"
 
