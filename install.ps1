@@ -21,6 +21,29 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $ErrorActionPreference = "Stop"
 
 # ============================================================
+# 设置淘宝 npm 镜像源（加速国内安装）
+# ============================================================
+$script:originalNpmRegistry = ""
+function Set-TaobaoNpmRegistry {
+    try {
+        $script:originalNpmRegistry = npm config get registry 2>$null
+        npm config set registry https://registry.npmmirror.com 2>$null
+        Write-Host "[信息] 已切换到淘宝 npm 镜像源" -ForegroundColor Gray
+    } catch {}
+}
+
+function Restore-NpmRegistry {
+    try {
+        if ($script:originalNpmRegistry -and $script:originalNpmRegistry -ne "undefined" -and $script:originalNpmRegistry -ne "https://registry.npmmirror.com") {
+            npm config set registry $script:originalNpmRegistry 2>$null
+        } else {
+            npm config set registry https://registry.npmjs.org 2>$null
+        }
+        Write-Host "[信息] 已恢复 npm 源设置" -ForegroundColor Gray
+    } catch {}
+}
+
+# ============================================================
 # 辅助函数
 # ============================================================
 
@@ -473,6 +496,11 @@ if (-not [string]::IsNullOrEmpty($bestMirror)) {
 }
 
 # ============================================================
+# 步骤 3.5: 设置淘宝 npm 镜像源
+# ============================================================
+Set-TaobaoNpmRegistry
+
+# ============================================================
 # 步骤 4: 安装 OpenClaw
 # ============================================================
 Write-Step "检查 OpenClaw..."
@@ -481,24 +509,8 @@ if (Test-Command "openclaw") {
     Write-Success "OpenClaw 已安装"
 } else {
     Write-Host "正在安装 OpenClaw..." -ForegroundColor Yellow
-    Write-Host "提示: 使用淘宝镜像源加速安装..." -ForegroundColor Gray
-
-    # 保存原来的 registry 设置
-    $originalRegistry = npm config get registry 2>$null
-    
-    # 设置淘宝镜像源
-    npm config set registry https://registry.npmmirror.com 2>$null
-    Write-Host "  已切换到淘宝 npm 镜像源" -ForegroundColor Gray
 
     npm install -g openclaw 2>$null
-
-    # 恢复原来的 registry 设置
-    if ($originalRegistry -and $originalRegistry -ne "undefined") {
-        npm config set registry $originalRegistry 2>$null
-    } else {
-        npm config set registry https://registry.npmjs.org 2>$null
-    }
-    Write-Host "  已恢复 npm 源设置" -ForegroundColor Gray
 
     Refresh-Path
 
@@ -829,6 +841,11 @@ Write-Step "重启网关服务..."
 openclaw gateway restart 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 
 Write-Success "Qwen 认证完成"
+
+# ============================================================
+# 恢复 npm 源设置
+# ============================================================
+Restore-NpmRegistry
 
 # ============================================================
 # 完成

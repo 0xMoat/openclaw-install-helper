@@ -23,6 +23,26 @@ print_warning() { echo -e "${YELLOW}[警告]${NC} $1"; }
 print_error() { echo -e "${RED}[错误]${NC} $1"; }
 
 # ============================================================
+# 设置淘宝 npm 镜像源（加速国内安装）
+# ============================================================
+ORIGINAL_NPM_REGISTRY=""
+
+set_taobao_npm_registry() {
+    ORIGINAL_NPM_REGISTRY=$(npm config get registry 2>/dev/null || echo "")
+    npm config set registry https://registry.npmmirror.com 2>/dev/null || true
+    echo -e "${CYAN}[信息]${NC} 已切换到淘宝 npm 镜像源"
+}
+
+restore_npm_registry() {
+    if [[ -n "$ORIGINAL_NPM_REGISTRY" && "$ORIGINAL_NPM_REGISTRY" != "undefined" && "$ORIGINAL_NPM_REGISTRY" != "https://registry.npmmirror.com" ]]; then
+        npm config set registry "$ORIGINAL_NPM_REGISTRY" 2>/dev/null || true
+    else
+        npm config set registry https://registry.npmjs.org 2>/dev/null || true
+    fi
+    echo -e "${CYAN}[信息]${NC} 已恢复 npm 源设置"
+}
+
+# ============================================================
 # 刷新 PATH（核心：避免重启终端）
 # ============================================================
 refresh_path() {
@@ -292,6 +312,11 @@ if [[ -n "$BEST_MIRROR" ]]; then
 fi
 
 # ============================================================
+# 步骤 3.5: 设置淘宝 npm 镜像源
+# ============================================================
+set_taobao_npm_registry
+
+# ============================================================
 # 步骤 4: 安装 OpenClaw
 # ============================================================
 print_step "检查 OpenClaw..."
@@ -300,24 +325,8 @@ if command_exists openclaw; then
     print_success "OpenClaw 已安装"
 else
     echo "正在安装 OpenClaw..."
-    echo "提示: 使用淘宝镜像源加速安装..."
-
-    # 保存原来的 registry 设置
-    original_registry=$(npm config get registry 2>/dev/null || echo "")
-    
-    # 设置淘宝镜像源
-    npm config set registry https://registry.npmmirror.com
-    echo "  已切换到淘宝 npm 镜像源"
 
     npm install -g openclaw < /dev/null
-
-    # 恢复原来的 registry 设置
-    if [[ -n "$original_registry" && "$original_registry" != "undefined" ]]; then
-        npm config set registry "$original_registry"
-    else
-        npm config set registry https://registry.npmjs.org
-    fi
-    echo "  已恢复 npm 源设置"
 
     refresh_path
 
@@ -560,6 +569,11 @@ print_step "重启网关服务..."
 openclaw gateway restart 2>&1 | grep -v "^$" || true
 
 print_success "Qwen 认证完成"
+
+# ============================================================
+# 恢复 npm 源设置
+# ============================================================
+restore_npm_registry
 
 # ============================================================
 # 完成
