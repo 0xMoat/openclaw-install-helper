@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # OpenClaw 一键安装脚本 (macOS)
-# 自动安装 Git, Node.js (LTS), pnpm, OpenClaw 及飞书插件
+# 自动安装 Git, Node.js (LTS), OpenClaw 及飞书插件
 # 无需重启终端
 #
 
@@ -31,12 +31,6 @@ refresh_path() {
         eval "$(/opt/homebrew/bin/brew shellenv)"
     elif [[ -f "/usr/local/bin/brew" ]]; then
         eval "$(/usr/local/bin/brew shellenv)"
-    fi
-
-    # pnpm 路径
-    export PNPM_HOME="$HOME/Library/pnpm"
-    if [[ -d "$PNPM_HOME" ]]; then
-        export PATH="$PNPM_HOME:$PATH"
     fi
 
     # npm 全局路径
@@ -170,7 +164,7 @@ cat << 'EOF'
   ╔═══════════════════════════════════════════════════════╗
   ║         OpenClaw 一键安装脚本 (macOS)                 ║
   ║                                                       ║
-  ║  将自动安装: Git, Node.js (LTS), pnpm, OpenClaw       ║
+  ║  将自动安装: Git, Node.js (LTS), OpenClaw             ║
   ╚═══════════════════════════════════════════════════════╝
 
 EOF
@@ -259,37 +253,7 @@ if $need_install_node; then
 fi
 
 # ============================================================
-# 步骤 3: 安装 pnpm
-# ============================================================
-print_step "检查 pnpm..."
-
-if command_exists pnpm; then
-    pnpm_version=$(pnpm --version)
-    print_success "pnpm 已安装: v$pnpm_version"
-else
-    echo "正在安装 pnpm..."
-
-    # 使用官方推荐的安装方式
-    curl -fsSL https://get.pnpm.io/install.sh | sh -s -- < /dev/null
-
-    # 立即设置 pnpm 环境变量
-    export PNPM_HOME="$HOME/Library/pnpm"
-    export PATH="$PNPM_HOME:$PATH"
-
-    refresh_path
-
-    if command_exists pnpm; then
-        pnpm_version=$(pnpm --version)
-        print_success "pnpm 安装完成: v$pnpm_version"
-    else
-        print_error "pnpm 安装失败"
-        echo "请尝试手动安装: npm install -g pnpm"
-        exit 1
-    fi
-fi
-
-# ============================================================
-# 步骤 4: 配置 Git 镜像（解决 GitHub 访问问题）
+# 步骤 3: 配置 Git 镜像（解决 GitHub 访问问题）
 # ============================================================
 BEST_MIRROR=$(select_best_mirror)
 apply_git_mirror "$BEST_MIRROR"
@@ -298,7 +262,7 @@ if [[ -n "$BEST_MIRROR" ]]; then
 fi
 
 # ============================================================
-# 步骤 5: 安装 OpenClaw
+# 步骤 4: 安装 OpenClaw
 # ============================================================
 print_step "检查 OpenClaw..."
 
@@ -308,7 +272,7 @@ else
     echo "正在安装 OpenClaw..."
     echo "提示: 如果安装过程较慢，请耐心等待（首次安装可能需要 5-10 分钟）..."
 
-    pnpm add -g openclaw < /dev/null
+    npm install -g openclaw < /dev/null
 
     refresh_path
 
@@ -322,7 +286,7 @@ else
         echo "2. 手动配置 Git 代理："
         echo "   git config --global http.proxy http://127.0.0.1:7890"
         echo "   git config --global https.proxy http://127.0.0.1:7890"
-        echo "3. 然后重新运行: pnpm add -g openclaw"
+        echo "3. 然后重新运行: npm install -g openclaw"
         exit 1
     fi
 fi
@@ -343,35 +307,6 @@ openclaw plugins install @m1heng-clawd/feishu < /dev/null
 
 print_success "飞书插件安装完成"
 
-# ============================================================
-# 配置 Shell（确保下次打开终端时 PATH 正确）
-# ============================================================
-print_step "配置 Shell 环境..."
-
-# 检测当前 shell
-current_shell=$(basename "$SHELL")
-shell_config=""
-
-if [[ "$current_shell" == "zsh" ]]; then
-    shell_config="$HOME/.zshrc"
-elif [[ "$current_shell" == "bash" ]]; then
-    if [[ -f "$HOME/.bash_profile" ]]; then
-        shell_config="$HOME/.bash_profile"
-    else
-        shell_config="$HOME/.bashrc"
-    fi
-fi
-
-if [[ -n "$shell_config" ]]; then
-    # 添加 pnpm 配置（如果不存在）
-    if ! grep -q "PNPM_HOME" "$shell_config" 2>/dev/null; then
-        echo '' >> "$shell_config"
-        echo '# pnpm' >> "$shell_config"
-        echo 'export PNPM_HOME="$HOME/Library/pnpm"' >> "$shell_config"
-        echo 'export PATH="$PNPM_HOME:$PATH"' >> "$shell_config"
-        print_success "已将 pnpm 配置添加到 $shell_config"
-    fi
-fi
 
 # ============================================================
 # 完成
@@ -386,7 +321,6 @@ cat << 'EOF'
   ║  已安装:                                              ║
   ║    - Git                                              ║
   ║    - Node.js                                          ║
-  ║    - pnpm                                             ║
   ║    - OpenClaw                                         ║
   ║    - 飞书插件                                         ║
   ║                                                       ║
@@ -401,7 +335,6 @@ echo -e "${NC}"
 echo -e "${CYAN}已安装版本:${NC}"
 echo "  Git:      $(git --version)"
 echo "  Node.js:  $(node --version)"
-echo "  pnpm:     v$(pnpm --version)"
 echo "  OpenClaw: $(openclaw --version 2>/dev/null || echo '已安装')"
 
 # ============================================================
