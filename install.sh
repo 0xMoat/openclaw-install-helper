@@ -59,6 +59,109 @@ command_exists() {
 }
 
 # ============================================================
+# GitHub 镜像源测速与选择
+# ============================================================
+
+# 测试单个镜像源是否真正可用（通过实际 git 操作）
+# 返回: "success" 或 "fail"
+test_mirror_available() {
+    local mirror_url="$1"
+
+    # 使用 git ls-remote 测试镜像是否真正可用
+    # 测试一个公开的小仓库
+    local test_url="${mirror_url}anthropics/skills.git"
+
+    if timeout 10 git ls-remote "$test_url" HEAD &> /dev/null; then
+        echo "success"
+    else
+        echo "fail"
+    fi
+}
+
+# 选择最快的可用 GitHub 镜像源
+# 返回: 最佳镜像 URL，如果没有可用镜像返回空字符串
+select_best_mirror() {
+    print_step "测试 GitHub 镜像源可用性..." >&2
+
+    local mirrors=(
+        "https://gh-proxy.com/https://github.com/"
+        "https://gitclone.com/github.com/"
+        "https://bgithub.xyz/"
+    )
+
+    local mirror_names=(
+        "gh-proxy.com"
+        "gitclone.com"
+        "bgithub.xyz"
+    )
+
+    local available_mirrors=()
+
+    for i in "${!mirrors[@]}"; do
+        local mirror="${mirrors[$i]}"
+        local name="${mirror_names[$i]}"
+
+        echo -n "  测试 $name ... " >&2
+
+        local result
+        result=$(test_mirror_available "$mirror")
+
+        if [[ "$result" == "success" ]]; then
+            echo -e "${GREEN}可用${NC}" >&2
+            available_mirrors+=("$mirror")
+        else
+            echo -e "${RED}不可用${NC}" >&2
+        fi
+    done
+
+    # 选择第一个可用的镜像（按优先级顺序）
+    if [[ ${#available_mirrors[@]} -gt 0 ]]; then
+        print_success "已选择可用镜像源" >&2
+        echo "${available_mirrors[0]}"
+    else
+        print_warning "所有镜像源均不可用，将直接连接 GitHub" >&2
+        echo ""
+    fi
+}
+
+# 应用镜像配置
+apply_git_mirror() {
+    local mirror_url="$1"
+
+    if [[ -z "$mirror_url" ]]; then
+        return
+    fi
+
+    # 根据镜像 URL 直接配置对应的 insteadOf
+    case "$mirror_url" in
+        *gh-proxy.com*)
+            # gh-proxy.com: https://gh-proxy.com/https://github.com/
+            git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
+            ;;
+        *gitclone.com*)
+            # gitclone.com: https://gitclone.com/github.com/
+            git config --global url."https://gitclone.com/github.com/".insteadOf "https://github.com/"
+            ;;
+        *bgithub.xyz*)
+            # bgithub.xyz: https://bgithub.xyz/
+            git config --global url."https://bgithub.xyz/".insteadOf "https://github.com/"
+            ;;
+        *)
+            git config --global url."$mirror_url".insteadOf "https://github.com/"
+            ;;
+    esac
+}
+
+# 清除镜像配置
+remove_git_mirror() {
+    # 清除所有可能的镜像配置
+    git config --global --unset url."https://gh-proxy.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://gitclone.com/github.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://bgithub.xyz/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://hub.fastgit.xyz/".insteadOf 2>/dev/null || true
+}
+
+# ============================================================
 # 开始安装
 # ============================================================
 echo -e "${MAGENTA}"
@@ -186,7 +289,16 @@ else
 fi
 
 # ============================================================
-# 步骤 4: 安装 OpenClaw
+# 步骤 4: 配置 Git 镜像（解决 GitHub 访问问题）
+# ============================================================
+BEST_MIRROR=$(select_best_mirror)
+apply_git_mirror "$BEST_MIRROR"
+if [[ -n "$BEST_MIRROR" ]]; then
+    print_success "Git 镜像配置完成"
+fi
+
+# ============================================================
+# 步骤 5: 安装 OpenClaw
 # ============================================================
 print_step "检查 OpenClaw..."
 
@@ -194,6 +306,8 @@ if command_exists openclaw; then
     print_success "OpenClaw 已安装"
 else
     echo "正在安装 OpenClaw..."
+    echo "提示: 如果安装过程较慢，请耐心等待（首次安装可能需要 5-10 分钟）..."
+
     pnpm add -g openclaw < /dev/null
 
     refresh_path
@@ -202,9 +316,23 @@ else
         print_success "OpenClaw 安装完成"
     else
         print_error "OpenClaw 安装失败"
+        echo ""
+        echo "如果仍然失败，请尝试以下方法："
+        echo "1. 使用 VPN 或代理"
+        echo "2. 手动配置 Git 代理："
+        echo "   git config --global http.proxy http://127.0.0.1:7890"
+        echo "   git config --global https.proxy http://127.0.0.1:7890"
+        echo "3. 然后重新运行: pnpm add -g openclaw"
         exit 1
     fi
 fi
+
+# ============================================================
+# 清理：安装完成后移除 Git 镜像配置（可选）
+# ============================================================
+print_step "清理 Git 镜像配置..."
+remove_git_mirror
+print_success "Git 配置已恢复"
 
 # ============================================================
 # 步骤 5: 安装飞书插件
@@ -337,7 +465,16 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
 
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
+
+    # 临时配置 Git 镜像以解决 GitHub 访问问题
+    SKILLS_MIRROR=$(select_best_mirror)
+    apply_git_mirror "$SKILLS_MIRROR"
+
     npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
+
+    # 恢复 Git 配置
+    remove_git_mirror
+    print_success "Git 配置已恢复"
 
     print_success "文件处理技能安装完成"
 
@@ -357,13 +494,25 @@ echo -e "${CYAN}─────────────────────�
 echo ""
 
 print_step "初始化 OpenClaw..."
-openclaw setup --non-interactive --accept-risk < /dev/null
+openclaw onboard --non-interactive --accept-risk --skip-daemon 2>&1 | grep -v "^$" || true
 
 print_step "安装网关服务..."
-openclaw gateway install < /dev/null
+if openclaw gateway install 2>&1; then
+    print_success "网关服务安装完成"
+else
+    print_error "网关服务安装失败"
+    exit 1
+fi
 
 print_step "启动网关服务..."
-openclaw gateway start < /dev/null
+if openclaw gateway start 2>&1; then
+    # 等待服务启动
+    sleep 3
+    print_success "网关服务启动完成"
+else
+    print_error "网关服务启动失败"
+    exit 1
+fi
 
 print_success "OpenClaw 初始化完成"
 
@@ -388,11 +537,9 @@ fi
 
 # 读取飞书 App Secret
 if [[ -t 0 ]]; then
-    read -s -p "飞书 App Secret: " feishu_app_secret
-    echo ""
+    read -p "飞书 App Secret: " feishu_app_secret
 elif [[ -e /dev/tty ]]; then
-    read -s -p "飞书 App Secret: " feishu_app_secret < /dev/tty
-    echo ""
+    read -p "飞书 App Secret: " feishu_app_secret < /dev/tty
 fi
 
 if [[ -n "$feishu_app_id" && -n "$feishu_app_secret" ]]; then
@@ -418,7 +565,21 @@ echo "请在浏览器中完成登录授权"
 echo ""
 
 print_step "启动 Qwen 认证..."
+
+# 首先启用 qwen-portal-auth plugin
+openclaw plugins enable qwen-portal-auth 2>&1 | grep -v "^$" || true
+
+# 然后进行认证（需要从 /dev/tty 读取交互式输入）
 openclaw models auth login --provider qwen-portal --set-default < /dev/tty
+
+# 复制 auth 配置到主 agent 目录
+if [[ -f ~/.openclaw/agents/main/agent/auth-profiles.json ]]; then
+    cp ~/.openclaw/agents/main/agent/auth-profiles.json ~/.openclaw/agents/main/auth-profiles.json
+fi
+
+# 重启 gateway 使配置生效
+print_step "重启网关服务..."
+openclaw gateway restart 2>&1 | grep -v "^$" || true
 
 print_success "Qwen 认证完成"
 
