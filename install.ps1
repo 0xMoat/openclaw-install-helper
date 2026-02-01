@@ -8,6 +8,14 @@
     无需重启终端
 #>
 
+# 设置控制台为 UTF-8 编码（解决中文乱码）
+try {
+    chcp 65001 | Out-Null
+} catch {}
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 # 设置编码和错误处理
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
