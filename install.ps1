@@ -3,7 +3,7 @@
 .SYNOPSIS
     OpenClaw 一键安装脚本 (Windows)
 .DESCRIPTION
-    自动安装 Git, Node.js (LTS), pnpm, OpenClaw 及飞书插件
+    自动安装 Git, Node.js (LTS), OpenClaw 及飞书插件
     支持有/无 winget 的环境
     无需重启终端
 #>
@@ -311,7 +311,7 @@ Write-Host @"
   ╔═══════════════════════════════════════════════════════╗
   ║        OpenClaw 一键安装脚本 (Windows)                ║
   ║                                                       ║
-  ║  将自动安装: Git, Node.js (LTS), pnpm, OpenClaw       ║
+  ║  将自动安装: Git, Node.js (LTS), OpenClaw             ║
   ╚═══════════════════════════════════════════════════════╝
 
 "@ -ForegroundColor Magenta
@@ -435,60 +435,7 @@ if ($needInstallNode) {
 }
 
 # ============================================================
-# 步骤 3: 安装 pnpm
-# ============================================================
-Write-Step "检查 pnpm..."
-
-if (Test-Command "pnpm") {
-    $pnpmVersion = pnpm --version
-    Write-Success "pnpm 已安装: v$pnpmVersion"
-} else {
-    Write-Host "正在安装 pnpm..." -ForegroundColor Yellow
-
-    $installed = $false
-
-    # 优先使用 winget 安装
-    if ($useWinget) {
-        winget install --id pnpm.pnpm -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
-        Refresh-Path
-        $installed = Test-Command "pnpm"
-    }
-
-    # 其次使用 Chocolatey
-    if (-not $installed -and $useChoco) {
-        if ($useWinget) { Write-Warning "winget 安装失败，尝试使用 Chocolatey..." }
-        choco install pnpm -y 2>$null
-        Refresh-Path
-        $installed = Test-Command "pnpm"
-    }
-
-    # 最后使用官方脚本（从 GitHub 下载）
-    if (-not $installed) {
-        Write-Warning "尝试使用官方脚本安装（从 GitHub 下载，可能较慢）..."
-        Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expression
-    }
-
-    # pnpm 安装后需要设置 PATH
-    $pnpmHome = "$env:LOCALAPPDATA\pnpm"
-    if (Test-Path $pnpmHome) {
-        $env:PNPM_HOME = $pnpmHome
-        $env:Path = "$pnpmHome;$env:Path"
-    }
-
-    Refresh-Path
-
-    if (Test-Command "pnpm") {
-        $pnpmVersion = pnpm --version
-        Write-Success "pnpm 安装完成: v$pnpmVersion"
-    } else {
-        Write-Err "pnpm 安装失败"
-        Write-Host "请尝试手动安装: npm install -g pnpm" -ForegroundColor Yellow
-        exit 1
-    }
-}
-
-# ============================================================
-# 步骤 4: 配置 Git 镜像（解决 GitHub 访问问题）
+# 步骤 3: 配置 Git 镜像（解决 GitHub 访问问题）
 # ============================================================
 $bestMirror = Select-BestMirror
 Apply-GitMirror $bestMirror
@@ -497,7 +444,7 @@ if (-not [string]::IsNullOrEmpty($bestMirror)) {
 }
 
 # ============================================================
-# 步骤 5: 安装 OpenClaw
+# 步骤 4: 安装 OpenClaw
 # ============================================================
 Write-Step "检查 OpenClaw..."
 
@@ -507,7 +454,7 @@ if (Test-Command "openclaw") {
     Write-Host "正在安装 OpenClaw..." -ForegroundColor Yellow
     Write-Host "提示: 如果安装过程较慢，请耐心等待（首次安装可能需要 5-10 分钟）..." -ForegroundColor Gray
 
-    pnpm add -g openclaw 2>$null
+    npm install -g openclaw 2>$null
 
     Refresh-Path
 
@@ -521,7 +468,7 @@ if (Test-Command "openclaw") {
         Write-Host "2. 手动配置 Git 代理："
         Write-Host "   git config --global http.proxy http://127.0.0.1:7890"
         Write-Host "   git config --global https.proxy http://127.0.0.1:7890"
-        Write-Host "3. 然后重新运行: pnpm add -g openclaw"
+        Write-Host "3. 然后重新运行: npm install -g openclaw"
         exit 1
     }
 }
@@ -534,7 +481,7 @@ Remove-GitMirror
 Write-Success "Git 配置已恢复"
 
 # ============================================================
-# 步骤 6: 安装飞书插件
+# 步骤 5: 安装飞书插件
 # ============================================================
 Write-Step "安装飞书插件..."
 
@@ -576,7 +523,6 @@ Write-Host @"
   ║  已安装:                                              ║
   ║    - Git                                              ║
   ║    - Node.js                                          ║
-  ║    - pnpm                                             ║
   ║    - OpenClaw                                         ║
   ║    - 飞书插件                                         ║
   ║                                                       ║
@@ -590,7 +536,6 @@ Write-Host @"
 Write-Host "已安装版本:" -ForegroundColor Cyan
 Write-Host "  Git:      $(git --version)"
 Write-Host "  Node.js:  $(node --version)"
-Write-Host "  pnpm:     v$(pnpm --version)"
 $openclawVer = (openclaw --version 2>$null)
 Write-Host "  OpenClaw: $(if ($openclawVer) { $openclawVer } else { '已安装' })"
 
