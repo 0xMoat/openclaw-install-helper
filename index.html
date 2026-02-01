@@ -956,7 +956,7 @@
 
             <div class="command-wrapper">
                 <div class="command-label">在 PowerShell (管理员) 中运行</div>
-                <code class="command-text" id="win-cmd">[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; irm https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1 | iex</code>
+                <code class="command-text" id="win-cmd">$ProgressPreference='SilentlyContinue'; iex ([Text.Encoding]::UTF8.GetString((iwr 'https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1' -UseBasicParsing).Content))</code>
                 <button class="copy-btn" onclick="copyCommand('win-cmd', this)" aria-label="复制">📋</button>
             </div>
 
