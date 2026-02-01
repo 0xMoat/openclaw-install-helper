@@ -59,6 +59,34 @@ function Test-Winget {
     }
 }
 
+# 检查 Chocolatey 是否可用
+function Test-Choco {
+    try {
+        $null = Get-Command choco -ErrorAction Stop
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+# 安装 Chocolatey（一键安装，无需用户交互）
+function Install-Chocolatey {
+    Write-Host "  正在安装 Chocolatey 包管理器..." -ForegroundColor Gray
+    try {
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+        # 刷新 PATH
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+
+        return Test-Choco
+    } catch {
+        Write-Err "Chocolatey 安装失败: $_"
+        return $false
+    }
+}
+
 # 获取系统架构
 function Get-SystemArch {
     if ([Environment]::Is64BitOperatingSystem) {
@@ -287,10 +315,20 @@ Write-Host @"
 
 # 检测安装方式
 $useWinget = Test-Winget
+$useChoco = Test-Choco
+
 if ($useWinget) {
     Write-Host "[信息] 检测到 winget，将使用 winget 安装" -ForegroundColor Gray
+} elseif ($useChoco) {
+    Write-Host "[信息] 检测到 Chocolatey，将使用 choco 安装" -ForegroundColor Gray
 } else {
-    Write-Host "[信息] 未检测到 winget，将使用直接下载安装" -ForegroundColor Gray
+    Write-Host "[信息] 未检测到 winget，正在安装 Chocolatey..." -ForegroundColor Gray
+    if (Install-Chocolatey) {
+        $useChoco = $true
+        Write-Success "Chocolatey 安装完成"
+    } else {
+        Write-Warning "Chocolatey 安装失败，将使用直接下载安装"
+    }
 }
 
 # ============================================================
@@ -305,14 +343,25 @@ if (Test-Command "git") {
     Write-Host "正在安装 Git..." -ForegroundColor Yellow
 
     $installed = $false
+
+    # 优先使用 winget
     if ($useWinget) {
         Install-Git-Winget
         Refresh-Path
         $installed = Test-Command "git"
     }
 
+    # 其次使用 Chocolatey
+    if (-not $installed -and $useChoco) {
+        if ($useWinget) { Write-Warning "winget 安装失败，尝试使用 Chocolatey..." }
+        choco install git -y 2>$null
+        Refresh-Path
+        $installed = Test-Command "git"
+    }
+
+    # 最后直接下载
     if (-not $installed) {
-        if ($useWinget) { Write-Warning "winget 安装失败，尝试直接下载..." }
+        Write-Warning "尝试直接下载安装..."
         $installed = Install-Git-Direct
         Refresh-Path
         $installed = Test-Command "git"
@@ -349,14 +398,25 @@ if ($needInstallNode) {
     Write-Host "正在安装 Node.js LTS..." -ForegroundColor Yellow
 
     $installed = $false
+
+    # 优先使用 winget
     if ($useWinget) {
         Install-Node-Winget
         Refresh-Path
         $installed = Test-Command "node"
     }
 
+    # 其次使用 Chocolatey
+    if (-not $installed -and $useChoco) {
+        if ($useWinget) { Write-Warning "winget 安装失败，尝试使用 Chocolatey..." }
+        choco install nodejs-lts -y 2>$null
+        Refresh-Path
+        $installed = Test-Command "node"
+    }
+
+    # 最后直接下载
     if (-not $installed) {
-        if ($useWinget) { Write-Warning "winget 安装失败，尝试直接下载..." }
+        Write-Warning "尝试直接下载安装..."
         $installed = Install-Node-Direct
         Refresh-Path
         $installed = Test-Command "node"
@@ -384,17 +444,24 @@ if (Test-Command "pnpm") {
 
     $installed = $false
 
-    # 优先使用 winget 安装（更快，不依赖 GitHub）
+    # 优先使用 winget 安装
     if ($useWinget) {
         winget install --id pnpm.pnpm -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
         Refresh-Path
         $installed = Test-Command "pnpm"
     }
 
-    # 如果 winget 安装失败，使用官方脚本
+    # 其次使用 Chocolatey
+    if (-not $installed -and $useChoco) {
+        if ($useWinget) { Write-Warning "winget 安装失败，尝试使用 Chocolatey..." }
+        choco install pnpm -y 2>$null
+        Refresh-Path
+        $installed = Test-Command "pnpm"
+    }
+
+    # 最后使用官方脚本（从 GitHub 下载）
     if (-not $installed) {
-        if ($useWinget) { Write-Warning "winget 安装失败，尝试使用官方脚本..." }
-        Write-Host "  从 GitHub 下载 pnpm（可能较慢）..." -ForegroundColor Gray
+        Write-Warning "尝试使用官方脚本安装（从 GitHub 下载，可能较慢）..."
         Invoke-WebRequest https://get.pnpm.io/install.ps1 -UseBasicParsing | Invoke-Expression
     }
 
@@ -544,15 +611,25 @@ if ($env:SKIP_SKILLS -ne "1") {
         Write-Host "正在安装 Python 3.12..." -ForegroundColor Yellow
 
         $installed = $false
+
+        # 优先使用 winget
         if ($useWinget) {
             winget install --id Python.Python.3.12 -e --source winget --accept-package-agreements --accept-source-agreements 2>$null
             Refresh-Path
             $installed = Test-Command "python"
         }
 
+        # 其次使用 Chocolatey
+        if (-not $installed -and $useChoco) {
+            if ($useWinget) { Write-Warning "winget 安装失败，尝试使用 Chocolatey..." }
+            choco install python312 -y 2>$null
+            Refresh-Path
+            $installed = Test-Command "python"
+        }
+
+        # 最后直接下载
         if (-not $installed) {
-            # 直接下载安装
-            Write-Host "  正在下载 Python 3.12..." -ForegroundColor Gray
+            Write-Warning "尝试直接下载安装..."
             $arch = Get-SystemArch
             $tempDir = "$env:TEMP\openclaw-install"
             New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
