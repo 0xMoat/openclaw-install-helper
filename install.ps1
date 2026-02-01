@@ -488,24 +488,28 @@ Write-Step "安装飞书插件..."
 # 刷新 PATH 确保 npm 可用（OpenClaw 插件安装依赖 npm）
 Refresh-Path
 
-# 检查 npm 是否可用
-if (-not (Test-Command "npm")) {
-    Write-Warning "npm 未找到，尝试定位..."
-    # 尝试找到 npm 的位置
-    $npmPaths = @(
-        "$env:ProgramFiles\nodejs\npm.cmd",
-        "${env:ProgramFiles(x86)}\nodejs\npm.cmd",
-        "$env:APPDATA\npm\npm.cmd"
-    )
-    foreach ($npmPath in $npmPaths) {
-        if (Test-Path $npmPath) {
-            $npmDir = Split-Path $npmPath -Parent
-            $env:Path = "$npmDir;$env:Path"
-            Write-Host "  已添加 npm 路径: $npmDir" -ForegroundColor Gray
-            break
-        }
+# 确保 npm 路径在 PATH 中（即使 Test-Command 能找到，子进程也需要）
+$npmPaths = @(
+    "$env:ProgramFiles\nodejs",
+    "${env:ProgramFiles(x86)}\nodejs",
+    "$env:ProgramData\chocolatey\bin",
+    "$env:APPDATA\npm"
+)
+foreach ($npmPath in $npmPaths) {
+    if ((Test-Path $npmPath) -and ($env:Path -notlike "*$npmPath*")) {
+        $env:Path = "$npmPath;$env:Path"
     }
 }
+
+# 验证 npm 可用
+if (-not (Test-Command "npm")) {
+    Write-Warning "npm 未找到，OpenClaw 插件安装可能失败"
+} else {
+    Write-Host "  npm 路径: $(Get-Command npm | Select-Object -ExpandProperty Source)" -ForegroundColor Gray
+}
+
+# 设置环境变量让子进程继承
+[System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Process")
 
 openclaw plugins install @m1heng-clawd/feishu 2>$null
 
