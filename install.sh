@@ -356,7 +356,7 @@ if [[ "$install_skills" =~ ^[Yy]$ ]]; then
 
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
-    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw
+    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g
 
     print_success "文件处理技能安装完成"
 

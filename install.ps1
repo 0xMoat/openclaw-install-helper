@@ -487,7 +487,7 @@ if ($installSkills) {
 
     # 安装文件处理技能
     Write-Step "安装 PDF, PPT, Excel, Docx 技能..."
-    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw
+    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g
 
     Write-Success "文件处理技能安装完成"
 
