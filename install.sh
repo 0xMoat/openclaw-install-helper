@@ -283,16 +283,24 @@ echo ""
 echo -e "${CYAN}────────────────────────────────────────────────────${NC}"
 echo ""
 
-# 检查是否在非交互模式下运行（CI 或管道）
-if [[ -t 0 ]]; then
-    # 交互模式：询问用户
+# 检查是否通过环境变量指定（CI 模式）
+if [[ -n "${INSTALL_SKILLS:-}" ]]; then
+    install_skills="$INSTALL_SKILLS"
+elif [[ -t 0 ]]; then
+    # stdin 是终端：直接询问
     echo -e "${YELLOW}是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？${NC}"
     echo "这将安装 Python 3.12 和相关技能包"
     echo ""
     read -p "安装文件处理技能? (y/N): " install_skills
+elif [[ -e /dev/tty ]]; then
+    # 管道模式但有终端可用：通过 /dev/tty 询问
+    echo -e "${YELLOW}是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？${NC}"
+    echo "这将安装 Python 3.12 和相关技能包"
+    echo ""
+    read -p "安装文件处理技能? (y/N): " install_skills < /dev/tty
 else
-    # 非交互模式：检查环境变量
-    install_skills="${INSTALL_SKILLS:-n}"
+    # 完全非交互模式：默认不安装
+    install_skills="n"
 fi
 
 if [[ "$install_skills" =~ ^[Yy]$ ]]; then

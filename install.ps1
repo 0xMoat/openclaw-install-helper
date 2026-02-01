@@ -375,20 +375,26 @@ Write-Host ""
 Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
 Write-Host ""
 
-# 检查是否在非交互模式下运行（CI 或管道）
-$isInteractive = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected
+# 检查是否通过环境变量指定（CI 模式）
 $installSkills = $false
 
-if ($isInteractive) {
-    # 交互模式：询问用户
+if ($env:INSTALL_SKILLS) {
+    $installSkills = $env:INSTALL_SKILLS -eq 'y'
+} elseif ([Environment]::UserInteractive) {
+    # 有用户交互环境：询问用户
     Write-Host "是否需要安装 PDF, PPT, Excel, Docx 等文件处理技能？" -ForegroundColor Yellow
     Write-Host "这将安装 Python 3.12 和相关技能包"
     Write-Host ""
-    $response = Read-Host "安装文件处理技能? (y/N)"
+    Write-Host -NoNewline "安装文件处理技能? (y/N): "
+
+    if ([Console]::IsInputRedirected) {
+        # 管道模式：通过 $Host.UI 直接从控制台读取
+        $response = $Host.UI.ReadLine()
+    } else {
+        # 正常模式：使用 Read-Host
+        $response = Read-Host
+    }
     $installSkills = $response -match '^[Yy]$'
-} else {
-    # 非交互模式：检查环境变量
-    $installSkills = $env:INSTALL_SKILLS -eq 'y'
 }
 
 if ($installSkills) {
