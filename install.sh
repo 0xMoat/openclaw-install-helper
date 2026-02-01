@@ -109,7 +109,7 @@ if command_exists git; then
     print_success "Git 已安装: $git_version"
 else
     echo "正在安装 Git..."
-    brew install git
+    brew install git < /dev/null
 
     refresh_path
 
@@ -142,7 +142,7 @@ fi
 
 if $need_install_node; then
     echo "正在安装 Node.js LTS..."
-    brew install node
+    brew install node < /dev/null
 
     refresh_path
 
@@ -167,7 +167,7 @@ else
     echo "正在安装 pnpm..."
 
     # 使用官方推荐的安装方式
-    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    curl -fsSL https://get.pnpm.io/install.sh | sh -s -- < /dev/null
 
     # 立即设置 pnpm 环境变量
     export PNPM_HOME="$HOME/Library/pnpm"
@@ -194,7 +194,7 @@ if command_exists openclaw; then
     print_success "OpenClaw 已安装"
 else
     echo "正在安装 OpenClaw..."
-    pnpm add -g openclaw
+    pnpm add -g openclaw < /dev/null
 
     refresh_path
 
@@ -211,7 +211,7 @@ fi
 # ============================================================
 print_step "安装飞书插件..."
 
-openclaw plugins install @m1heng-clawd/feishu
+openclaw plugins install @m1heng-clawd/feishu < /dev/null
 
 print_success "飞书插件安装完成"
 
@@ -314,7 +314,7 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
 
     if $need_install_python; then
         echo "正在安装 Python 3.12..."
-        brew install python@3.12
+        brew install python@3.12 < /dev/null
 
         refresh_path
 
