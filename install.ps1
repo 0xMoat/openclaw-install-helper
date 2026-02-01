@@ -511,17 +511,24 @@ foreach ($npmPath in $npmPaths) {
     }
 }
 
-# 验证 npm 可用
-if (-not (Test-Command "npm")) {
-    Write-Warning "npm 未找到，OpenClaw 插件安装可能失败"
+# 验证 npm.cmd 存在（Node.js spawn 需要 .cmd 文件）
+$npmCmd = Get-Command npm.cmd -ErrorAction SilentlyContinue
+if ($npmCmd) {
+    Write-Host "  npm.cmd 路径: $($npmCmd.Source)" -ForegroundColor Gray
 } else {
-    Write-Host "  npm 路径: $(Get-Command npm | Select-Object -ExpandProperty Source)" -ForegroundColor Gray
+    Write-Warning "npm.cmd 未找到，尝试查找..."
+    # 尝试找到 npm.cmd
+    $nodejsPath = "$env:ProgramFiles\nodejs"
+    if (Test-Path "$nodejsPath\npm.cmd") {
+        Write-Host "  找到 npm.cmd: $nodejsPath\npm.cmd" -ForegroundColor Gray
+    }
 }
 
 # 设置环境变量让子进程继承
 [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Process")
 
-openclaw plugins install @m1heng-clawd/feishu 2>$null
+# 使用 cmd /c 运行 openclaw（解决 Windows 上 spawn 找不到 npm 的问题）
+cmd /c "openclaw plugins install @m1heng-clawd/feishu" 2>$null
 
 Write-Success "飞书插件安装完成"
 
