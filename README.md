@@ -17,7 +17,7 @@ curl -fsSL https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/insta
 以**管理员身份**打开「PowerShell」，复制粘贴以下命令后按回车：
 
 ```powershell
-irm https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1 | iex
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; irm https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1 | iex
 ```
 
 > **注意**：如果提示执行策略错误，请先运行：
