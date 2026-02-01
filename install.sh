@@ -83,6 +83,9 @@ select_best_mirror() {
         "https://hub.gitmirror.com/"
         "https://mirror.ghproxy.com/https://github.com/"
         "https://gh.qninq.cn/https://github.com/"
+        "https://gh.api.99988866.xyz/https://github.com/"
+        "https://github.moeyy.xyz/https://github.com/"
+        "https://gh-proxy.com/https://github.com/"
     )
 
     local mirror_names=(
@@ -91,6 +94,9 @@ select_best_mirror() {
         "gitmirror.com"
         "ghproxy.com"
         "gh.qninq.cn"
+        "gh.api.99988866.xyz"
+        "github.moeyy.xyz"
+        "gh-proxy.com"
     )
 
     local available_mirrors=()
@@ -147,6 +153,15 @@ apply_git_mirror() {
         *gh.qninq.cn*)
             git config --global url."https://gh.qninq.cn/https://github.com/".insteadOf "https://github.com/"
             ;;
+        *gh.api.99988866.xyz*)
+            git config --global url."https://gh.api.99988866.xyz/https://github.com/".insteadOf "https://github.com/"
+            ;;
+        *github.moeyy.xyz*)
+            git config --global url."https://github.moeyy.xyz/https://github.com/".insteadOf "https://github.com/"
+            ;;
+        *gh-proxy.com*)
+            git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
+            ;;
         *)
             git config --global url."$mirror_url".insteadOf "https://github.com/"
             ;;
@@ -161,6 +176,9 @@ remove_git_mirror() {
     git config --global --unset url."https://hub.gitmirror.com/".insteadOf 2>/dev/null || true
     git config --global --unset url."https://mirror.ghproxy.com/https://github.com/".insteadOf 2>/dev/null || true
     git config --global --unset url."https://gh.qninq.cn/https://github.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://gh.api.99988866.xyz/https://github.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://github.moeyy.xyz/https://github.com/".insteadOf 2>/dev/null || true
+    git config --global --unset url."https://gh-proxy.com/https://github.com/".insteadOf 2>/dev/null || true
     # 兼容旧配置
     git config --global --unset url."https://gh-proxy.com/https://github.com/".insteadOf 2>/dev/null || true
     git config --global --unset url."https://gitclone.com/github.com/".insteadOf 2>/dev/null || true

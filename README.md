@@ -9,7 +9,7 @@
 打开「终端」，复制粘贴以下命令后按回车：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/0xmoat/openclaw-install-helper/main/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.sh | bash
 ```
 
 ### Windows 用户
@@ -17,7 +17,7 @@ curl -fsSL https://raw.githubusercontent.com/0xmoat/openclaw-install-helper/main
 以**管理员身份**打开「PowerShell」，复制粘贴以下命令后按回车：
 
 ```powershell
-irm https://raw.githubusercontent.com/0xmoat/openclaw-install-helper/main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1 | iex
 ```
 
 > **注意**：如果提示执行策略错误，请先运行：

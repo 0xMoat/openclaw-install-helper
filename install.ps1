@@ -156,7 +156,10 @@ function Select-BestMirror {
         @{ Url = "https://kkgithub.com/"; Name = "kkgithub.com" },
         @{ Url = "https://hub.gitmirror.com/"; Name = "gitmirror.com" },
         @{ Url = "https://mirror.ghproxy.com/https://github.com/"; Name = "ghproxy.com" },
-        @{ Url = "https://gh.qninq.cn/https://github.com/"; Name = "gh.qninq.cn" }
+        @{ Url = "https://gh.qninq.cn/https://github.com/"; Name = "gh.qninq.cn" },
+        @{ Url = "https://gh.api.99988866.xyz/https://github.com/"; Name = "gh.api.99988866.xyz" },
+        @{ Url = "https://github.moeyy.xyz/https://github.com/"; Name = "github.moeyy.xyz" },
+        @{ Url = "https://gh-proxy.com/https://github.com/"; Name = "gh-proxy.com" }
     )
 
     $availableMirrors = @()
@@ -201,6 +204,12 @@ function Apply-GitMirror {
         git config --global url."https://mirror.ghproxy.com/https://github.com/".insteadOf "https://github.com/"
     } elseif ($mirrorUrl -like "*gh.qninq.cn*") {
         git config --global url."https://gh.qninq.cn/https://github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*gh.api.99988866.xyz*") {
+        git config --global url."https://gh.api.99988866.xyz/https://github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*github.moeyy.xyz*") {
+        git config --global url."https://github.moeyy.xyz/https://github.com/".insteadOf "https://github.com/"
+    } elseif ($mirrorUrl -like "*gh-proxy.com*") {
+        git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
     } else {
         git config --global url."$mirrorUrl".insteadOf "https://github.com/"
     }
@@ -215,6 +224,8 @@ function Remove-GitMirror {
         "url.https://hub.gitmirror.com/.insteadOf",
         "url.https://mirror.ghproxy.com/https://github.com/.insteadOf",
         "url.https://gh.qninq.cn/https://github.com/.insteadOf",
+        "url.https://gh.api.99988866.xyz/https://github.com/.insteadOf",
+        "url.https://github.moeyy.xyz/https://github.com/.insteadOf",
         "url.https://gh-proxy.com/https://github.com/.insteadOf",
         "url.https://gitclone.com/github.com/.insteadOf",
         "url.https://bgithub.xyz/.insteadOf"
