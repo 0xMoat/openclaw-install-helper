@@ -1101,14 +1101,13 @@ Write-Host "  ╔═════════════════════
 Write-Host "  ║                     配置完成!                         ║" -ForegroundColor Green
 Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ║  OpenClaw 已准备就绪!                                 ║" -ForegroundColor Green
+Write-Host "  ║  已连接您的feishu机器人，请在飞书中开始使用！         ║" -ForegroundColor Green
+Write-Host "  ║  也可以打开浏览器访问 http://127.0.0.1:18789 开始使用!║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ║  常用命令:                                            ║" -ForegroundColor Green
 Write-Host "  ║    openclaw dashboard   - 打开控制台 (浏览器)     ║" -ForegroundColor Green
 Write-Host "  ║    openclaw gateway restart - 重启服务                ║" -ForegroundColor Green
 Write-Host "  ║    openclaw gateway stop    - 停止服务                ║" -ForegroundColor Green
-Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ║  本地地址: http://127.0.0.1:18789/__openclaw__/canvas/║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
