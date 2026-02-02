@@ -493,9 +493,11 @@ cat << 'EOF'
   ║  OpenClaw 已准备就绪!                                 ║
   ║                                                       ║
   ║  常用命令:                                            ║
-  ║    openclaw status    - 查看状态                      ║
-  ║    openclaw dashboard - 打开控制面板                  ║
-  ║    openclaw doctor    - 健康检查                      ║
+  ║    openclaw dashboard   - 打开控制台 (浏览器)     ║
+  ║    openclaw gateway restart - 重启服务                ║
+  ║    openclaw gateway stop    - 停止服务                ║
+  ║                                                       ║
+  ║  本地地址: http://127.0.0.1:18789/__openclaw__/canvas/║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
 EOF

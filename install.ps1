@@ -1104,9 +1104,11 @@ Write-Host "  ║                                                       ║" -Fo
 Write-Host "  ║  OpenClaw 已准备就绪!                                 ║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ║  常用命令:                                            ║" -ForegroundColor Green
-Write-Host "  ║    openclaw status    - 查看状态                      ║" -ForegroundColor Green
-Write-Host "  ║    openclaw dashboard - 打开控制面板                  ║" -ForegroundColor Green
-Write-Host "  ║    openclaw doctor    - 健康检查                      ║" -ForegroundColor Green
+Write-Host "  ║    openclaw dashboard   - 打开控制台 (浏览器)     ║" -ForegroundColor Green
+Write-Host "  ║    openclaw gateway restart - 重启服务                ║" -ForegroundColor Green
+Write-Host "  ║    openclaw gateway stop    - 停止服务                ║" -ForegroundColor Green
+Write-Host "  ║                                                       ║" -ForegroundColor Green
+Write-Host "  ║  本地地址: http://127.0.0.1:18789/__openclaw__/canvas/║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
