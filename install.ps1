@@ -726,12 +726,27 @@ Select-BestNpmRegistry
 # ============================================================
 Write-Step "检查 OpenClaw..."
 
+# Cloudflare R2 托管的包 URL（避免 GitHub 访问问题）
+$OpenclawR2Url = "https://packages.mintmind.io/openclaw-2026.1.30.tgz"
+
 if (Test-Command "openclaw") {
     Write-Success "OpenClaw 已安装"
 } else {
-    Write-Host "正在安装 OpenClaw（显示安装进度）..." -ForegroundColor Yellow
+    Write-Host "正在安装 OpenClaw（从 Cloudflare 下载）..." -ForegroundColor Yellow
 
-    npm install -g openclaw --progress --loglevel=notice
+    # 优先从 R2 安装，如果失败则回退到 npm registry
+    $r2InstallSuccess = $false
+    try {
+        npm install -g $OpenclawR2Url --progress --loglevel=notice 2>$null
+        $r2InstallSuccess = $true
+    } catch {
+        $r2InstallSuccess = $false
+    }
+
+    if (-not $r2InstallSuccess -or -not (Test-Command "openclaw")) {
+        Write-Warning "从 Cloudflare 下载失败，尝试 npm registry..."
+        npm install -g openclaw --progress --loglevel=notice
+    }
 
     Refresh-Path
 
