@@ -21,20 +21,137 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $ErrorActionPreference = "Stop"
 
 # ============================================================
-# 设置淘宝 npm 镜像源（加速国内安装）
+# NPM 镜像源测速与选择（并发测试）
 # ============================================================
 $script:originalNpmRegistry = ""
-function Set-TaobaoNpmRegistry {
+$script:selectedNpmRegistry = ""
+
+# 并发选择最快的可用 NPM 镜像源
+function Select-BestNpmRegistry {
+    Write-Step "并发测试 NPM 镜像源..."
+
+    $registries = @(
+        @{ Url = "https://registry.npmmirror.com/"; Name = "淘宝源(阿里)" },
+        @{ Url = "https://mirrors.cloud.tencent.com/npm/"; Name = "腾讯云源" },
+        @{ Url = "https://mirrors.huaweicloud.com/repository/npm/"; Name = "华为云源" },
+        @{ Url = "https://registry.npmjs.org/"; Name = "官方源(npmjs)" }
+    )
+
+    # 保存原始镜像源配置
     try {
         $script:originalNpmRegistry = npm config get registry 2>$null
-        npm config set registry https://registry.npmmirror.com 2>$null
-        Write-Host "[信息] 已切换到淘宝 npm 镜像源" -ForegroundColor Gray
     } catch {}
+
+    Write-Host "  正在并发测试 $($registries.Count) 个镜像源..." -ForegroundColor Gray
+
+    # 测试脚本块
+    $testScript = {
+        param($registryUrl, $registryName)
+        try {
+            $testUrl = "${registryUrl}lodash"
+            $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+
+            $request = [System.Net.WebRequest]::Create($testUrl)
+            $request.Timeout = 8000
+            $request.Method = "GET"
+
+            try {
+                $response = $request.GetResponse()
+                $response.Close()
+                $stopwatch.Stop()
+                return @{
+                    Success = $true
+                    Time = $stopwatch.ElapsedMilliseconds
+                    Url = $registryUrl
+                    Name = $registryName
+                }
+            } catch {
+                return @{
+                    Success = $false
+                    Time = -1
+                    Url = $registryUrl
+                    Name = $registryName
+                }
+            }
+        } catch {
+            return @{
+                Success = $false
+                Time = -1
+                Url = $registryUrl
+                Name = $registryName
+            }
+        }
+    }
+
+    # 创建并发任务
+    $runspacePool = [runspacefactory]::CreateRunspacePool(1, $registries.Count)
+    $runspacePool.Open()
+
+    $jobs = @()
+    foreach ($registry in $registries) {
+        $powershell = [powershell]::Create().AddScript($testScript).AddArgument($registry.Url).AddArgument($registry.Name)
+        $powershell.RunspacePool = $runspacePool
+        $jobs += @{
+            PowerShell = $powershell
+            Handle = $powershell.BeginInvoke()
+            Registry = $registry
+        }
+    }
+
+    # 等待所有任务完成（最多 10 秒）
+    $timeout = [DateTime]::Now.AddSeconds(10)
+    while ($jobs | Where-Object { -not $_.Handle.IsCompleted }) {
+        if ([DateTime]::Now -gt $timeout) {
+            break
+        }
+        Start-Sleep -Milliseconds 100
+    }
+
+    # 收集结果
+    $results = @()
+    foreach ($job in $jobs) {
+        try {
+            if ($job.Handle.IsCompleted) {
+                $result = $job.PowerShell.EndInvoke($job.Handle)
+                if ($result -and $result.Success) {
+                    Write-Host "  $($result.Name): " -NoNewline
+                    Write-Host "$($result.Time)ms" -ForegroundColor Green
+                    $results += $result
+                } else {
+                    Write-Host "  $($job.Registry.Name): " -NoNewline
+                    Write-Host "不可用" -ForegroundColor Red
+                }
+            } else {
+                Write-Host "  $($job.Registry.Name): " -NoNewline
+                Write-Host "超时" -ForegroundColor Red
+            }
+        } catch {
+            Write-Host "  $($job.Registry.Name): " -NoNewline
+            Write-Host "错误" -ForegroundColor Red
+        } finally {
+            $job.PowerShell.Dispose()
+        }
+    }
+
+    $runspacePool.Close()
+    $runspacePool.Dispose()
+
+    # 按响应时间排序，选择最快的
+    if ($results.Count -gt 0) {
+        $best = $results | Sort-Object { $_.Time } | Select-Object -First 1
+        Write-Success "已选择最快 NPM 镜像源: $($best.Name) ($($best.Time)ms)"
+        $script:selectedNpmRegistry = $best.Url
+        npm config set registry $best.Url 2>$null
+    } else {
+        Write-Warning "所有镜像源均不可用，使用淘宝镜像源"
+        $script:selectedNpmRegistry = "https://registry.npmmirror.com/"
+        npm config set registry "https://registry.npmmirror.com/" 2>$null
+    }
 }
 
 function Restore-NpmRegistry {
     try {
-        if ($script:originalNpmRegistry -and $script:originalNpmRegistry -ne "undefined" -and $script:originalNpmRegistry -ne "https://registry.npmmirror.com") {
+        if ($script:originalNpmRegistry -and $script:originalNpmRegistry -ne "undefined" -and $script:originalNpmRegistry -ne $script:selectedNpmRegistry) {
             npm config set registry $script:originalNpmRegistry 2>$null
         } else {
             npm config set registry https://registry.npmjs.org 2>$null
@@ -554,9 +671,9 @@ if (-not [string]::IsNullOrEmpty($bestMirror)) {
 }
 
 # ============================================================
-# 步骤 3.5: 设置淘宝 npm 镜像源
+# 步骤 3.5: 选择最佳 NPM 镜像源
 # ============================================================
-Set-TaobaoNpmRegistry
+Select-BestNpmRegistry
 
 # ============================================================
 # 步骤 4: 安装 OpenClaw
@@ -566,9 +683,9 @@ Write-Step "检查 OpenClaw..."
 if (Test-Command "openclaw") {
     Write-Success "OpenClaw 已安装"
 } else {
-    Write-Host "正在安装 OpenClaw..." -ForegroundColor Yellow
+    Write-Host "正在安装 OpenClaw（显示安装进度）..." -ForegroundColor Yellow
 
-    npm install -g openclaw 2>$null
+    npm install -g openclaw --progress --loglevel=notice
 
     Refresh-Path
 

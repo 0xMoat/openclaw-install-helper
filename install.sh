@@ -23,18 +23,138 @@ print_warning() { echo -e "${YELLOW}[警告]${NC} $1"; }
 print_error() { echo -e "${RED}[错误]${NC} $1"; }
 
 # ============================================================
-# 设置淘宝 npm 镜像源（加速国内安装）
+# NPM 镜像源测速与选择（并发测试）
 # ============================================================
 ORIGINAL_NPM_REGISTRY=""
+SELECTED_NPM_REGISTRY=""
 
-set_taobao_npm_registry() {
+# 获取毫秒级时间戳（兼容 macOS 和 Linux）
+get_timestamp_ms() {
+    if command -v gdate &> /dev/null; then
+        gdate +%s%3N
+    elif command -v python3 &> /dev/null; then
+        python3 -c 'import time; print(int(time.time() * 1000))'
+    elif command -v python &> /dev/null; then
+        python -c 'import time; print(int(time.time() * 1000))'
+    else
+        # 降级为秒级（乘以1000模拟毫秒）
+        echo $(($(date +%s) * 1000))
+    fi
+}
+
+# 测试单个 NPM 镜像源并记录响应时间
+# 参数: registry_url output_file name
+test_npm_registry_with_timing() {
+    local registry_url="$1"
+    local output_file="$2"
+    local name="$3"
+
+    local start_time=$(get_timestamp_ms)
+
+    # 使用 curl 测试镜像源响应时间（获取一个小包的元数据）
+    if curl -s --connect-timeout 5 --max-time 8 "${registry_url}lodash" > /dev/null 2>&1; then
+        local end_time=$(get_timestamp_ms)
+        local elapsed=$((end_time - start_time))
+        echo "${elapsed}|${registry_url}|${name}" > "$output_file"
+    else
+        echo "failed|${registry_url}|${name}" > "$output_file"
+    fi
+}
+
+# 并发选择最快的可用 NPM 镜像源
+# 返回: 设置 SELECTED_NPM_REGISTRY 变量
+select_best_npm_registry() {
+    print_step "并发测试 NPM 镜像源..." >&2
+
+    local registries=(
+        "https://registry.npmmirror.com/"
+        "https://mirrors.cloud.tencent.com/npm/"
+        "https://mirrors.huaweicloud.com/repository/npm/"
+        "https://registry.npmjs.org/"
+    )
+
+    local registry_names=(
+        "淘宝源(阿里)"
+        "腾讯云源"
+        "华为云源"
+        "官方源(npmjs)"
+    )
+
+    # 保存原始镜像源配置
     ORIGINAL_NPM_REGISTRY=$(npm config get registry 2>/dev/null || echo "")
-    npm config set registry https://registry.npmmirror.com 2>/dev/null || true
-    echo -e "${CYAN}[信息]${NC} 已切换到淘宝 npm 镜像源"
+
+    # 创建临时目录存放测试结果
+    local tmp_dir=$(mktemp -d)
+    local pids=()
+
+    # 并发启动所有测试
+    echo "  正在并发测试 ${#registries[@]} 个镜像源..." >&2
+    for i in "${!registries[@]}"; do
+        local registry="${registries[$i]}"
+        local name="${registry_names[$i]}"
+        test_npm_registry_with_timing "$registry" "$tmp_dir/result_$i" "$name" &
+        pids+=($!)
+    done
+
+    # 等待所有测试完成（最多等待 10 秒）
+    local wait_count=0
+    while [[ $wait_count -lt 20 ]]; do
+        local all_done=true
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                all_done=false
+                break
+            fi
+        done
+        if $all_done; then
+            break
+        fi
+        sleep 0.5
+        ((wait_count++))
+    done
+
+    # 收集结果并排序
+    local results=()
+    for i in "${!registries[@]}"; do
+        local result_file="$tmp_dir/result_$i"
+        if [[ -f "$result_file" ]]; then
+            local content=$(cat "$result_file")
+            local timing=$(echo "$content" | cut -d'|' -f1)
+            local url=$(echo "$content" | cut -d'|' -f2)
+            local name=$(echo "$content" | cut -d'|' -f3)
+
+            if [[ "$timing" != "failed" ]]; then
+                echo -e "  ${name}: ${GREEN}${timing}ms${NC}" >&2
+                results+=("$timing|$url|$name")
+            else
+                echo -e "  ${name}: ${RED}不可用${NC}" >&2
+            fi
+        fi
+    done
+
+    # 清理临时文件
+    rm -rf "$tmp_dir"
+
+    # 按响应时间排序，选择最快的
+    if [[ ${#results[@]} -gt 0 ]]; then
+        # 使用 sort 按数字排序
+        local best=$(printf '%s\n' "${results[@]}" | sort -t'|' -k1 -n | head -1)
+        local best_url=$(echo "$best" | cut -d'|' -f2)
+        local best_name=$(echo "$best" | cut -d'|' -f3)
+        local best_time=$(echo "$best" | cut -d'|' -f1)
+
+        print_success "已选择最快 NPM 镜像源: $best_name (${best_time}ms)" >&2
+        SELECTED_NPM_REGISTRY="$best_url"
+        npm config set registry "$best_url" 2>/dev/null || true
+    else
+        print_warning "所有镜像源均不可用，使用淘宝镜像源" >&2
+        SELECTED_NPM_REGISTRY="https://registry.npmmirror.com/"
+        npm config set registry "https://registry.npmmirror.com/" 2>/dev/null || true
+    fi
 }
 
 restore_npm_registry() {
-    if [[ -n "$ORIGINAL_NPM_REGISTRY" && "$ORIGINAL_NPM_REGISTRY" != "undefined" && "$ORIGINAL_NPM_REGISTRY" != "https://registry.npmmirror.com" ]]; then
+    if [[ -n "$ORIGINAL_NPM_REGISTRY" && "$ORIGINAL_NPM_REGISTRY" != "undefined" && "$ORIGINAL_NPM_REGISTRY" != "$SELECTED_NPM_REGISTRY" ]]; then
         npm config set registry "$ORIGINAL_NPM_REGISTRY" 2>/dev/null || true
     else
         npm config set registry https://registry.npmjs.org 2>/dev/null || true
@@ -355,9 +475,9 @@ if [[ -n "$BEST_MIRROR" ]]; then
 fi
 
 # ============================================================
-# 步骤 3.5: 设置淘宝 npm 镜像源
+# 步骤 3.5: 选择最佳 NPM 镜像源
 # ============================================================
-set_taobao_npm_registry
+select_best_npm_registry
 
 # ============================================================
 # 步骤 4: 安装 OpenClaw
@@ -367,9 +487,9 @@ print_step "检查 OpenClaw..."
 if command_exists openclaw; then
     print_success "OpenClaw 已安装"
 else
-    echo "正在安装 OpenClaw..."
+    echo "正在安装 OpenClaw（显示安装进度）..."
 
-    npm install -g openclaw < /dev/null
+    npm install -g openclaw --progress --loglevel=notice
 
     refresh_path
 
