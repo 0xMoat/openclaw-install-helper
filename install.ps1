@@ -407,9 +407,9 @@ function Install-Node-Direct {
 Write-Host @"
 
   ╔═══════════════════════════════════════════════════════╗
-  ║        OpenClaw 一键安装脚本 (Windows)                ║
+  ║    金牌小密探😎 OpenClaw 一键安装脚本 (Windows)       ║
   ║                                                       ║
-  ║  将自动安装: Git, Node.js (LTS), OpenClaw             ║
+  ║  将自动安装: Git, Node.js, Python, OpenClaw           ║
   ╚═══════════════════════════════════════════════════════╝
 
 "@ -ForegroundColor Magenta
