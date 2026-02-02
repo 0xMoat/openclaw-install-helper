@@ -316,14 +316,17 @@ apply_git_mirror() {
     fi
 
     # 辅助函数：配置单个镜像的所有 URL 重定向
+    # 注意：使用 --add 来添加多个 insteadOf 值，而不是覆盖
     set_mirror_config() {
         local prefix="$1"
-        # HTTPS URL
-        git config --global url."$prefix".insteadOf "https://github.com/"
-        # SSH URL (npm 的 git 依赖可能使用这种格式)
-        git config --global url."$prefix".insteadOf "ssh://git@github.com/"
+        # 先清除可能存在的旧配置
+        git config --global --unset-all url."$prefix".insteadOf 2>/dev/null || true
+        # HTTPS URL（使用 --add 添加第一个）
+        git config --global --add url."$prefix".insteadOf "https://github.com/"
+        # SSH URL (npm 的 git 依赖使用这种格式)
+        git config --global --add url."$prefix".insteadOf "ssh://git@github.com/"
         # Git SSH 短格式
-        git config --global url."$prefix".insteadOf "git@github.com:"
+        git config --global --add url."$prefix".insteadOf "git@github.com:"
     }
 
     # 根据镜像 URL 直接配置对应的 insteadOf
