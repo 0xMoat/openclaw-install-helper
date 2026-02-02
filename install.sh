@@ -455,20 +455,20 @@ select_best_npm_registry
 # ============================================================
 print_step "检查 OpenClaw..."
 
-# Cloudflare R2 托管的包 URL（避免 GitHub 访问问题）
+# Gitee 托管的包 URL（中国境内访问更快）
 OPENCLAW_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/openclaw-2026.1.30.tgz"
 
 if command_exists openclaw; then
     print_success "OpenClaw 已安装"
 else
-    echo "正在安装 OpenClaw（从 Cloudflare 下载）..."
+    echo "正在安装 OpenClaw（从 Gitee 下载）..."
 
     # 使用 --ignore-scripts 避免 postinstall 脚本失败导致安装不完整
     # （如 node-llama-cpp 在某些平台编译失败）
     if npm install -g "$OPENCLAW_R2_URL" --ignore-scripts --progress --loglevel=notice; then
         echo ""
     else
-        print_warning "从 Cloudflare 下载失败，尝试 npm registry..."
+        print_warning "从 Gitee 下载失败，尝试 npm registry..."
         npm install -g openclaw --ignore-scripts --progress --loglevel=notice
     fi
 
@@ -496,7 +496,7 @@ fi
 # ============================================================
 print_step "安装飞书插件..."
 
-# Cloudflare R2 托管的飞书插件 URL
+# Gitee 托管的飞书插件 URL
 FEISHU_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/feishu-0.1.6.tgz"
 FEISHU_TMP="/tmp/feishu-plugin.tgz"
 
@@ -505,7 +505,7 @@ if curl -sL -o "$FEISHU_TMP" "$FEISHU_R2_URL" && [[ -f "$FEISHU_TMP" ]]; then
     openclaw plugins install "$FEISHU_TMP" < /dev/null
     rm -f "$FEISHU_TMP"
 else
-    print_warning "从 Cloudflare 下载失败，尝试 npm registry..."
+    print_warning "从 Gitee 下载失败，尝试 npm registry..."
     openclaw plugins install @m1heng-clawd/feishu < /dev/null
 fi
 
@@ -603,7 +603,7 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
 
-    # 从 Cloudflare R2 下载 skills 包
+    # 从 Gitee 下载 skills 包
     SKILLS_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/anthropics-skills.tar.gz"
     SKILLS_TMP="/tmp/anthropics-skills.tar.gz"
     SKILLS_DIR="/tmp/anthropics-skills"
@@ -620,7 +620,7 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
         # 清理临时文件
         rm -rf "$SKILLS_TMP" "$SKILLS_DIR"
     else
-        print_warning "从 Cloudflare 下载失败，尝试 GitHub..."
+        print_warning "从 Gitee 下载失败，尝试 GitHub..."
         # 临时配置 Git 镜像
         SKILLS_MIRROR=$(select_best_mirror)
         apply_git_mirror "$SKILLS_MIRROR"

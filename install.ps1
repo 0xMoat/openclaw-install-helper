@@ -705,7 +705,7 @@ Select-BestNpmRegistry
 # ============================================================
 Write-Step "检查 OpenClaw..."
 
-# Cloudflare R2 托管的包 URL（避免 GitHub 访问问题）
+# Gitee 托管的包 URL（中国境内访问更快）
 $OpenclawR2Url = "https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/openclaw-2026.1.30.tgz"
 
 # 检测 openclaw 是否已安装且可正常运行
@@ -726,7 +726,7 @@ if ($openclawWorking) {
     if (Test-Command "openclaw") {
         Write-Warning "检测到损坏的 OpenClaw 安装，正在修复..."
     } else {
-        Write-Host "正在安装 OpenClaw（从 Cloudflare 下载）..." -ForegroundColor Yellow
+        Write-Host "正在安装 OpenClaw（从 Gitee 下载）..." -ForegroundColor Yellow
     }
 
     # 先清理可能存在的损坏安装
@@ -758,7 +758,7 @@ if ($openclawWorking) {
     }
 
     if (-not $r2InstallSuccess -or -not (Test-Command "openclaw")) {
-        Write-Warning "从 Cloudflare 下载失败，尝试 npm registry..."
+        Write-Warning "从 Gitee 下载失败，尝试 npm registry..."
         & npm install -g openclaw --ignore-scripts --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
     }
 
@@ -818,7 +818,7 @@ if ($npmCmd) {
 # 设置环境变量让子进程继承
 [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Process")
 
-# Cloudflare R2 托管的飞书插件 URL
+# Gitee 托管的飞书插件 URL
 $FeishuR2Url = "https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/feishu-0.1.6.tgz"
 $FeishuTmp = "$env:TEMP\feishu-plugin.tgz"
 
@@ -828,7 +828,7 @@ $FeishuTmp = "$env:TEMP\feishu-plugin.tgz"
 # 优先从 R2 下载安装，如果失败则从 npm 安装
 $feishuInstalled = $false
 try {
-    Write-Host "  从 Cloudflare 下载飞书插件..." -ForegroundColor Gray
+    Write-Host "  从 Gitee 下载飞书插件..." -ForegroundColor Gray
     
     # 使用 WebClient，比 Invoke-WebRequest 更可靠
     $webClient = New-Object System.Net.WebClient
@@ -849,7 +849,7 @@ try {
 }
 
 if (-not $feishuInstalled) {
-    Write-Warning "从 Cloudflare 下载/安装失败，尝试 npm registry..."
+    Write-Warning "从 Gitee 下载/安装失败，尝试 npm registry..."
     cmd /c "openclaw plugins install @m1heng-clawd/feishu" 2>$null
 }
 
