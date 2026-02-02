@@ -409,7 +409,7 @@ Write-Host @"
   ╔═══════════════════════════════════════════════════════╗
   ║    金牌小密探😎 OpenClaw飞书版 一键安装脚本 (Windows) ║
   ║                                                       ║
-  ║  将自动安装: Git, Node.js, Python, OpenClaw           ║
+  ║  将自动安装 OpenClaw 及其依赖: Git, Node.js, Python   ║
   ╚═══════════════════════════════════════════════════════╝
 
 "@ -ForegroundColor Magenta
