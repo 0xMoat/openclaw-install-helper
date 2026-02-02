@@ -456,7 +456,7 @@ select_best_npm_registry
 print_step "检查 OpenClaw..."
 
 # Cloudflare R2 托管的包 URL（避免 GitHub 访问问题）
-OPENCLAW_R2_URL="https://packages.mintmind.io/openclaw-2026.1.30.tgz"
+OPENCLAW_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/openclaw-2026.1.30.tgz"
 
 if command_exists openclaw; then
     print_success "OpenClaw 已安装"
@@ -497,7 +497,7 @@ fi
 print_step "安装飞书插件..."
 
 # Cloudflare R2 托管的飞书插件 URL
-FEISHU_R2_URL="https://packages.mintmind.io/feishu-0.1.6.tgz"
+FEISHU_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/feishu-0.1.6.tgz"
 FEISHU_TMP="/tmp/feishu-plugin.tgz"
 
 # 优先从 R2 下载安装，如果失败则从 npm 安装
@@ -604,7 +604,7 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
 
     # 从 Cloudflare R2 下载 skills 包
-    SKILLS_R2_URL="https://packages.mintmind.io/anthropics-skills.tar.gz"
+    SKILLS_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/anthropics-skills.tar.gz"
     SKILLS_TMP="/tmp/anthropics-skills.tar.gz"
     SKILLS_DIR="/tmp/anthropics-skills"
 

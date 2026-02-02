@@ -706,7 +706,7 @@ Select-BestNpmRegistry
 Write-Step "检查 OpenClaw..."
 
 # Cloudflare R2 托管的包 URL（避免 GitHub 访问问题）
-$OpenclawR2Url = "https://packages.mintmind.io/openclaw-2026.1.30.tgz"
+$OpenclawR2Url = "https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/openclaw-2026.1.30.tgz"
 
 # 检测 openclaw 是否已安装且可正常运行
 $openclawWorking = $false
@@ -819,7 +819,7 @@ if ($npmCmd) {
 [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Process")
 
 # Cloudflare R2 托管的飞书插件 URL
-$FeishuR2Url = "https://packages.mintmind.io/feishu-0.1.6.tgz"
+$FeishuR2Url = "https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/feishu-0.1.6.tgz"
 $FeishuTmp = "$env:TEMP\feishu-plugin.tgz"
 
 # 确保 TLS 1.2
