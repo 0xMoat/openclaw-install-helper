@@ -2,7 +2,7 @@ name = "openclaw-gh-proxy"
 main = "github-proxy.js"
 compatibility_date = "2024-01-01"
 
-# 可选：添加自定义域名
-# routes = [
-#   { pattern = "gh-proxy.yourdomain.com", zone_name = "yourdomain.com" }
-# ]
+# 自定义域名配置
+[[routes]]
+pattern = "openclaw.mintmind.io"
+custom_domain = true

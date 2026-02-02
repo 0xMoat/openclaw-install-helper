@@ -281,8 +281,10 @@ function Select-BestMirror {
     # 镜像列表：包含测试用的完整文件 URL
     # 测试下载 README 文件来验证镜像可用性
     $mirrors = @(
-        # 自建 Cloudflare Worker 代理（优先）
-        @{ Url = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"; TestUrl = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy" },
+        # 自建 Cloudflare Worker 代理（自定义域名，优先）
+        @{ Url = "https://openclaw.mintmind.io/https://github.com/"; TestUrl = "https://openclaw.mintmind.io/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy" },
+        # 自建 Cloudflare Worker 代理（workers.dev 备用）
+        @{ Url = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"; TestUrl = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy-workers" },
         # 公共镜像源（备用）
         @{ Url = "https://ghfast.top/https://github.com/"; TestUrl = "https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md"; Name = "ghfast.top" },
         @{ Url = "https://github.moeyy.xyz/https://github.com/"; TestUrl = "https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md"; Name = "github.moeyy.xyz" },
@@ -426,7 +428,9 @@ function Apply-GitMirror {
     }
 
     # 根据镜像 URL 直接配置对应的 insteadOf
-    if ($mirrorUrl -like "*ghfast.top*") {
+    if ($mirrorUrl -like "*mintmind.io*") {
+        Set-MirrorConfig "https://openclaw.mintmind.io/https://github.com/"
+    } elseif ($mirrorUrl -like "*ghfast.top*") {
         Set-MirrorConfig "https://ghfast.top/https://github.com/"
     } elseif ($mirrorUrl -like "*kkgithub.com*") {
         Set-MirrorConfig "https://kkgithub.com/"
@@ -451,6 +455,7 @@ function Apply-GitMirror {
 function Remove-GitMirror {
     # 所有镜像前缀
     $mirrorPrefixes = @(
+        "https://openclaw.mintmind.io/https://github.com/",
         "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/",
         "https://ghfast.top/https://github.com/",
         "https://kkgithub.com/",

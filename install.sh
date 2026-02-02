@@ -224,8 +224,10 @@ select_best_mirror() {
 
     # 镜像列表：镜像URL|测试URL|名称
     local mirror_configs=(
-        # 自建 Cloudflare Worker 代理（优先）
-        "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/|https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy"
+        # 自建 Cloudflare Worker 代理（自定义域名，优先）
+        "https://openclaw.mintmind.io/https://github.com/|https://openclaw.mintmind.io/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy"
+        # 自建 Cloudflare Worker 代理（workers.dev 备用）
+        "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/|https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy-workers"
         # 公共镜像源（备用）
         "https://ghfast.top/https://github.com/|https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md|ghfast.top"
         "https://github.moeyy.xyz/https://github.com/|https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md|github.moeyy.xyz"
@@ -331,6 +333,9 @@ apply_git_mirror() {
 
     # 根据镜像 URL 直接配置对应的 insteadOf
     case "$mirror_url" in
+        *mintmind.io*)
+            set_mirror_config "https://openclaw.mintmind.io/https://github.com/"
+            ;;
         *ghfast.top*)
             set_mirror_config "https://ghfast.top/https://github.com/"
             ;;
@@ -365,6 +370,7 @@ apply_git_mirror() {
 remove_git_mirror() {
     # 所有镜像前缀
     local prefixes=(
+        "https://openclaw.mintmind.io/https://github.com/"
         "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"
         "https://ghfast.top/https://github.com/"
         "https://kkgithub.com/"
