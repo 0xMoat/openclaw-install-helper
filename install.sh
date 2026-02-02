@@ -463,12 +463,13 @@ if command_exists openclaw; then
 else
     echo "正在安装 OpenClaw（从 Cloudflare 下载）..."
 
-    # 优先从 R2 安装，如果失败则回退到 npm registry
-    if npm install -g "$OPENCLAW_R2_URL" --progress --loglevel=notice; then
+    # 使用 --ignore-scripts 避免 postinstall 脚本失败导致安装不完整
+    # （如 node-llama-cpp 在某些平台编译失败）
+    if npm install -g "$OPENCLAW_R2_URL" --ignore-scripts --progress --loglevel=notice; then
         echo ""
     else
         print_warning "从 Cloudflare 下载失败，尝试 npm registry..."
-        npm install -g openclaw --progress --loglevel=notice
+        npm install -g openclaw --ignore-scripts --progress --loglevel=notice
     fi
 
     refresh_path
@@ -483,7 +484,7 @@ else
         echo "2. 手动配置 Git 代理："
         echo "   git config --global http.proxy http://127.0.0.1:7890"
         echo "   git config --global https.proxy http://127.0.0.1:7890"
-        echo "3. 然后重新运行: npm install -g openclaw"
+        echo "3. 然后重新运行: npm install -g openclaw --ignore-scripts"
         exit 1
     fi
 fi

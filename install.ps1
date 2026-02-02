@@ -713,12 +713,19 @@ if (Test-Command "openclaw") {
 } else {
     Write-Host "正在安装 OpenClaw（从 Cloudflare 下载）..." -ForegroundColor Yellow
 
-    # 优先从 R2 安装，如果失败则回退到 npm registry
+    # 先清理可能存在的损坏安装
+    $openclawDir = "$env:APPDATA\npm\node_modules\openclaw"
+    if (Test-Path $openclawDir) {
+        Write-Host "  清理旧安装..." -ForegroundColor Gray
+        Remove-Item -Recurse -Force $openclawDir -ErrorAction SilentlyContinue
+    }
+
+    # 使用 --ignore-scripts 避免 node-llama-cpp postinstall 失败导致安装不完整
     $r2InstallSuccess = $false
     Write-Host "  正在下载 OpenClaw（约 12MB），请稍候..." -ForegroundColor Gray
     try {
-        # 使用 & 运算符直接执行，保持输出
-        & npm install -g $OpenclawR2Url --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
+        # 使用 --ignore-scripts 跳过可能失败的 postinstall 脚本
+        & npm install -g $OpenclawR2Url --ignore-scripts --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
         if ($LASTEXITCODE -eq 0) {
             $r2InstallSuccess = $true
         }
@@ -728,7 +735,7 @@ if (Test-Command "openclaw") {
 
     if (-not $r2InstallSuccess -or -not (Test-Command "openclaw")) {
         Write-Warning "从 Cloudflare 下载失败，尝试 npm registry..."
-        & npm install -g openclaw --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
+        & npm install -g openclaw --ignore-scripts --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
     }
 
     Refresh-Path
@@ -743,7 +750,7 @@ if (Test-Command "openclaw") {
         Write-Host "2. 手动配置 Git 代理："
         Write-Host "   git config --global http.proxy http://127.0.0.1:7890"
         Write-Host "   git config --global https.proxy http://127.0.0.1:7890"
-        Write-Host "3. 然后重新运行: npm install -g openclaw"
+        Write-Host "3. 然后重新运行: npm install -g openclaw --ignore-scripts"
         exit 1
     }
 }
