@@ -737,7 +737,7 @@ if (Test-Command "openclaw") {
     # 优先从 R2 安装，如果失败则回退到 npm registry
     $r2InstallSuccess = $false
     try {
-        npm install -g $OpenclawR2Url --progress --loglevel=notice 2>$null
+        npm install -g $OpenclawR2Url --progress --loglevel=notice
         $r2InstallSuccess = $true
     } catch {
         $r2InstallSuccess = $false
