@@ -197,17 +197,18 @@ command_exists() {
 # ============================================================
 
 # 测试单个镜像源并记录响应时间
-# 参数: mirror_url output_file
+# 参数: test_url mirror_url output_file name
 # 输出: 将结果写入 output_file
 test_mirror_with_timing() {
-    local mirror_url="$1"
-    local output_file="$2"
-    local name="$3"
-    
-    local test_url="${mirror_url}anthropics/skills.git"
+    local test_url="$1"
+    local mirror_url="$2"
+    local output_file="$3"
+    local name="$4"
+
     local start_time=$(date +%s%3N 2>/dev/null || date +%s)
-    
-    if timeout 10 git ls-remote "$test_url" HEAD &> /dev/null; then
+
+    # 使用 curl 测试 HTTP 请求（HEAD 请求，超时 8 秒）
+    if curl -sfI --connect-timeout 5 --max-time 8 "$test_url" &> /dev/null; then
         local end_time=$(date +%s%3N 2>/dev/null || date +%s)
         local elapsed=$((end_time - start_time))
         echo "${elapsed}|${mirror_url}|${name}" > "$output_file"
@@ -221,26 +222,16 @@ test_mirror_with_timing() {
 select_best_mirror() {
     print_step "并发测试 GitHub 镜像源..." >&2
 
-    local mirrors=(
-        "https://ghfast.top/https://github.com/"
-        "https://kkgithub.com/"
-        "https://hub.gitmirror.com/"
-        "https://mirror.ghproxy.com/https://github.com/"
-        "https://gh.qninq.cn/https://github.com/"
-        "https://gh.api.99988866.xyz/https://github.com/"
-        "https://github.moeyy.xyz/https://github.com/"
-        "https://gh-proxy.com/https://github.com/"
-    )
-
-    local mirror_names=(
-        "ghfast.top"
-        "kkgithub.com"
-        "gitmirror.com"
-        "ghproxy.com"
-        "gh.qninq.cn"
-        "gh.api.99988866.xyz"
-        "github.moeyy.xyz"
-        "gh-proxy.com"
+    # 镜像列表：镜像URL|测试URL|名称
+    local mirror_configs=(
+        "https://ghfast.top/https://github.com/|https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md|ghfast.top"
+        "https://github.moeyy.xyz/https://github.com/|https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md|github.moeyy.xyz"
+        "https://gh-proxy.com/https://github.com/|https://gh-proxy.com/https://github.com/npm/cli/raw/latest/README.md|gh-proxy.com"
+        "https://mirror.ghproxy.com/https://github.com/|https://mirror.ghproxy.com/https://github.com/npm/cli/raw/latest/README.md|ghproxy.com"
+        "https://gh.qninq.cn/https://github.com/|https://gh.qninq.cn/https://github.com/npm/cli/raw/latest/README.md|gh.qninq.cn"
+        "https://kkgithub.com/|https://raw.kkgithub.com/npm/cli/latest/README.md|kkgithub.com"
+        "https://hub.gitmirror.com/|https://raw.gitmirror.com/npm/cli/latest/README.md|gitmirror.com"
+        "https://gh.api.99988866.xyz/https://github.com/|https://gh.api.99988866.xyz/https://github.com/npm/cli/raw/latest/README.md|gh.api.99988866.xyz"
     )
 
     # 创建临时目录存放测试结果
@@ -248,11 +239,13 @@ select_best_mirror() {
     local pids=()
 
     # 并发启动所有测试
-    echo "  正在并发测试 ${#mirrors[@]} 个镜像源..." >&2
-    for i in "${!mirrors[@]}"; do
-        local mirror="${mirrors[$i]}"
-        local name="${mirror_names[$i]}"
-        test_mirror_with_timing "$mirror" "$tmp_dir/result_$i" "$name" &
+    echo "  正在并发测试 ${#mirror_configs[@]} 个镜像源..." >&2
+    for i in "${!mirror_configs[@]}"; do
+        local config="${mirror_configs[$i]}"
+        local mirror_url=$(echo "$config" | cut -d'|' -f1)
+        local test_url=$(echo "$config" | cut -d'|' -f2)
+        local name=$(echo "$config" | cut -d'|' -f3)
+        test_mirror_with_timing "$test_url" "$mirror_url" "$tmp_dir/result_$i" "$name" &
         pids+=($!)
     done
 
@@ -275,7 +268,7 @@ select_best_mirror() {
 
     # 收集结果并排序
     local results=()
-    for i in "${!mirrors[@]}"; do
+    for i in "${!mirror_configs[@]}"; do
         local result_file="$tmp_dir/result_$i"
         if [[ -f "$result_file" ]]; then
             local content=$(cat "$result_file")
@@ -319,53 +312,73 @@ apply_git_mirror() {
         return
     fi
 
+    # 辅助函数：配置单个镜像的所有 URL 重定向
+    set_mirror_config() {
+        local prefix="$1"
+        # HTTPS URL
+        git config --global url."$prefix".insteadOf "https://github.com/"
+        # SSH URL (npm 的 git 依赖可能使用这种格式)
+        git config --global url."$prefix".insteadOf "ssh://git@github.com/"
+        # Git SSH 短格式
+        git config --global url."$prefix".insteadOf "git@github.com:"
+    }
+
     # 根据镜像 URL 直接配置对应的 insteadOf
     case "$mirror_url" in
         *ghfast.top*)
-            git config --global url."https://ghfast.top/https://github.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://ghfast.top/https://github.com/"
             ;;
         *kkgithub.com*)
-            git config --global url."https://kkgithub.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://kkgithub.com/"
             ;;
         *gitmirror.com*)
-            git config --global url."https://hub.gitmirror.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://hub.gitmirror.com/"
             ;;
         *ghproxy.com*)
-            git config --global url."https://mirror.ghproxy.com/https://github.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://mirror.ghproxy.com/https://github.com/"
             ;;
         *gh.qninq.cn*)
-            git config --global url."https://gh.qninq.cn/https://github.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://gh.qninq.cn/https://github.com/"
             ;;
         *gh.api.99988866.xyz*)
-            git config --global url."https://gh.api.99988866.xyz/https://github.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://gh.api.99988866.xyz/https://github.com/"
             ;;
         *github.moeyy.xyz*)
-            git config --global url."https://github.moeyy.xyz/https://github.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://github.moeyy.xyz/https://github.com/"
             ;;
         *gh-proxy.com*)
-            git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
+            set_mirror_config "https://gh-proxy.com/https://github.com/"
             ;;
         *)
-            git config --global url."$mirror_url".insteadOf "https://github.com/"
+            set_mirror_config "$mirror_url"
             ;;
     esac
 }
 
 # 清除镜像配置
 remove_git_mirror() {
+    # 所有镜像前缀
+    local prefixes=(
+        "https://ghfast.top/https://github.com/"
+        "https://kkgithub.com/"
+        "https://hub.gitmirror.com/"
+        "https://mirror.ghproxy.com/https://github.com/"
+        "https://gh.qninq.cn/https://github.com/"
+        "https://gh.api.99988866.xyz/https://github.com/"
+        "https://github.moeyy.xyz/https://github.com/"
+        "https://gh-proxy.com/https://github.com/"
+        "https://gitclone.com/github.com/"
+        "https://bgithub.xyz/"
+    )
+
     # 清除所有可能的镜像配置
-    git config --global --unset url."https://ghfast.top/https://github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://kkgithub.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://hub.gitmirror.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://mirror.ghproxy.com/https://github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://gh.qninq.cn/https://github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://gh.api.99988866.xyz/https://github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://github.moeyy.xyz/https://github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://gh-proxy.com/https://github.com/".insteadOf 2>/dev/null || true
-    # 兼容旧配置
-    git config --global --unset url."https://gh-proxy.com/https://github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://gitclone.com/github.com/".insteadOf 2>/dev/null || true
-    git config --global --unset url."https://bgithub.xyz/".insteadOf 2>/dev/null || true
+    for prefix in "${prefixes[@]}"; do
+        git config --global --unset url."$prefix".insteadOf 2>/dev/null || true
+    done
+
+    # 额外清除可能的 SSH 和 git@ 格式的源地址配置
+    git config --global --unset-all url.*.insteadOf "ssh://git@github.com/" 2>/dev/null || true
+    git config --global --unset-all url.*.insteadOf "git@github.com:" 2>/dev/null || true
 }
 
 # ============================================================

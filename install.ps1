@@ -278,31 +278,40 @@ function Download-File {
 function Select-BestMirror {
     Write-Step "并发测试 GitHub 镜像源..."
 
+    # 镜像列表：包含测试用的完整文件 URL
+    # 测试下载 README 文件来验证镜像可用性
     $mirrors = @(
-        @{ Url = "https://ghfast.top/https://github.com/"; Name = "ghfast.top" },
-        @{ Url = "https://kkgithub.com/"; Name = "kkgithub.com" },
-        @{ Url = "https://hub.gitmirror.com/"; Name = "gitmirror.com" },
-        @{ Url = "https://mirror.ghproxy.com/https://github.com/"; Name = "ghproxy.com" },
-        @{ Url = "https://gh.qninq.cn/https://github.com/"; Name = "gh.qninq.cn" },
-        @{ Url = "https://gh.api.99988866.xyz/https://github.com/"; Name = "gh.api.99988866.xyz" },
-        @{ Url = "https://github.moeyy.xyz/https://github.com/"; Name = "github.moeyy.xyz" },
-        @{ Url = "https://gh-proxy.com/https://github.com/"; Name = "gh-proxy.com" }
+        @{ Url = "https://ghfast.top/https://github.com/"; TestUrl = "https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md"; Name = "ghfast.top" },
+        @{ Url = "https://github.moeyy.xyz/https://github.com/"; TestUrl = "https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md"; Name = "github.moeyy.xyz" },
+        @{ Url = "https://gh-proxy.com/https://github.com/"; TestUrl = "https://gh-proxy.com/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh-proxy.com" },
+        @{ Url = "https://mirror.ghproxy.com/https://github.com/"; TestUrl = "https://mirror.ghproxy.com/https://github.com/npm/cli/raw/latest/README.md"; Name = "ghproxy.com" },
+        @{ Url = "https://gh.qninq.cn/https://github.com/"; TestUrl = "https://gh.qninq.cn/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh.qninq.cn" },
+        @{ Url = "https://kkgithub.com/"; TestUrl = "https://raw.kkgithub.com/npm/cli/latest/README.md"; Name = "kkgithub.com" },
+        @{ Url = "https://hub.gitmirror.com/"; TestUrl = "https://raw.gitmirror.com/npm/cli/latest/README.md"; Name = "gitmirror.com" },
+        @{ Url = "https://gh.api.99988866.xyz/https://github.com/"; TestUrl = "https://gh.api.99988866.xyz/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh.api.99988866.xyz" }
     )
 
     Write-Host "  正在并发测试 $($mirrors.Count) 个镜像源..." -ForegroundColor Gray
 
-    # 测试脚本块
+    # 测试脚本块 - 使用 HTTP 请求测试
     $testScript = {
-        param($mirrorUrl, $mirrorName)
+        param($mirrorUrl, $testUrl, $mirrorName)
         try {
-            $testUrl = "${mirrorUrl}anthropics/skills.git"
             $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-            
-            $process = Start-Process -FilePath "git" -ArgumentList "ls-remote", "$testUrl", "HEAD" -NoNewWindow -Wait -PassThru -RedirectStandardOutput "NUL" -RedirectStandardError "NUL"
-            
+
+            # 使用 WebRequest 测试，设置超时 8 秒
+            $request = [System.Net.WebRequest]::Create($testUrl)
+            $request.Method = "HEAD"
+            $request.Timeout = 8000
+            $request.AllowAutoRedirect = $true
+
+            $response = $request.GetResponse()
+            $statusCode = [int]$response.StatusCode
+            $response.Close()
+
             $stopwatch.Stop()
-            
-            if ($process.ExitCode -eq 0) {
+
+            if ($statusCode -ge 200 -and $statusCode -lt 400) {
                 return @{
                     Success = $true
                     Time = $stopwatch.ElapsedMilliseconds
@@ -330,10 +339,10 @@ function Select-BestMirror {
     # 创建并发任务
     $runspacePool = [runspacefactory]::CreateRunspacePool(1, $mirrors.Count)
     $runspacePool.Open()
-    
+
     $jobs = @()
     foreach ($mirror in $mirrors) {
-        $powershell = [powershell]::Create().AddScript($testScript).AddArgument($mirror.Url).AddArgument($mirror.Name)
+        $powershell = [powershell]::Create().AddScript($testScript).AddArgument($mirror.Url).AddArgument($mirror.TestUrl).AddArgument($mirror.Name)
         $powershell.RunspacePool = $runspacePool
         $jobs += @{
             PowerShell = $powershell
@@ -399,45 +408,64 @@ function Apply-GitMirror {
         return
     }
 
+    # 辅助函数：配置单个镜像的所有 URL 重定向
+    function Set-MirrorConfig {
+        param($mirrorPrefix)
+        # HTTPS URL
+        git config --global url."$mirrorPrefix".insteadOf "https://github.com/"
+        # SSH URL (npm 的 git 依赖可能使用这种格式)
+        git config --global url."$mirrorPrefix".insteadOf "ssh://git@github.com/"
+        # Git SSH 短格式
+        git config --global url."$mirrorPrefix".insteadOf "git@github.com:"
+    }
+
     # 根据镜像 URL 直接配置对应的 insteadOf
     if ($mirrorUrl -like "*ghfast.top*") {
-        git config --global url."https://ghfast.top/https://github.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://ghfast.top/https://github.com/"
     } elseif ($mirrorUrl -like "*kkgithub.com*") {
-        git config --global url."https://kkgithub.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://kkgithub.com/"
     } elseif ($mirrorUrl -like "*gitmirror.com*") {
-        git config --global url."https://hub.gitmirror.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://hub.gitmirror.com/"
     } elseif ($mirrorUrl -like "*ghproxy.com*") {
-        git config --global url."https://mirror.ghproxy.com/https://github.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://mirror.ghproxy.com/https://github.com/"
     } elseif ($mirrorUrl -like "*gh.qninq.cn*") {
-        git config --global url."https://gh.qninq.cn/https://github.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://gh.qninq.cn/https://github.com/"
     } elseif ($mirrorUrl -like "*gh.api.99988866.xyz*") {
-        git config --global url."https://gh.api.99988866.xyz/https://github.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://gh.api.99988866.xyz/https://github.com/"
     } elseif ($mirrorUrl -like "*github.moeyy.xyz*") {
-        git config --global url."https://github.moeyy.xyz/https://github.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://github.moeyy.xyz/https://github.com/"
     } elseif ($mirrorUrl -like "*gh-proxy.com*") {
-        git config --global url."https://gh-proxy.com/https://github.com/".insteadOf "https://github.com/"
+        Set-MirrorConfig "https://gh-proxy.com/https://github.com/"
     } else {
-        git config --global url."$mirrorUrl".insteadOf "https://github.com/"
+        Set-MirrorConfig "$mirrorUrl"
     }
 }
 
 # 清除镜像配置
 function Remove-GitMirror {
-    # 清除所有可能的镜像配置
-    @(
-        "url.https://ghfast.top/https://github.com/.insteadOf",
-        "url.https://kkgithub.com/.insteadOf",
-        "url.https://hub.gitmirror.com/.insteadOf",
-        "url.https://mirror.ghproxy.com/https://github.com/.insteadOf",
-        "url.https://gh.qninq.cn/https://github.com/.insteadOf",
-        "url.https://gh.api.99988866.xyz/https://github.com/.insteadOf",
-        "url.https://github.moeyy.xyz/https://github.com/.insteadOf",
-        "url.https://gh-proxy.com/https://github.com/.insteadOf",
-        "url.https://gitclone.com/github.com/.insteadOf",
-        "url.https://bgithub.xyz/.insteadOf"
-    ) | ForEach-Object {
-        git config --global --unset $_ 2>$null
+    # 所有镜像前缀
+    $mirrorPrefixes = @(
+        "https://ghfast.top/https://github.com/",
+        "https://kkgithub.com/",
+        "https://hub.gitmirror.com/",
+        "https://mirror.ghproxy.com/https://github.com/",
+        "https://gh.qninq.cn/https://github.com/",
+        "https://gh.api.99988866.xyz/https://github.com/",
+        "https://github.moeyy.xyz/https://github.com/",
+        "https://gh-proxy.com/https://github.com/",
+        "https://gitclone.com/github.com/",
+        "https://bgithub.xyz/"
+    )
+
+    # 清除所有可能的镜像配置（包括 HTTPS、SSH 和 git@ 格式）
+    foreach ($prefix in $mirrorPrefixes) {
+        git config --global --unset "url.$prefix.insteadOf" 2>$null
     }
+
+    # 额外清除可能的 SSH 和 git@ 格式的源地址配置
+    # 这些是 insteadOf 的值，不是 key，所以需要用 --unset-all 匹配
+    git config --global --unset-all url.*.insteadOf "ssh://git@github.com/" 2>$null
+    git config --global --unset-all url.*.insteadOf "git@github.com:" 2>$null
 }
 
 # ============================================================
