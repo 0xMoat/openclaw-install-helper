@@ -787,14 +787,34 @@ if ($npmCmd) {
 $FeishuR2Url = "https://packages.mintmind.io/feishu-0.1.6.tgz"
 $FeishuTmp = "$env:TEMP\feishu-plugin.tgz"
 
+# 确保 TLS 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # 优先从 R2 下载安装，如果失败则从 npm 安装
+$feishuInstalled = $false
 try {
     Write-Host "  从 Cloudflare 下载飞书插件..." -ForegroundColor Gray
-    Invoke-WebRequest -Uri $FeishuR2Url -OutFile $FeishuTmp -UseBasicParsing -ErrorAction Stop
-    cmd /c "openclaw plugins install `"$FeishuTmp`"" 2>$null
-    Remove-Item -Path $FeishuTmp -Force -ErrorAction SilentlyContinue
+    
+    # 使用 WebClient，比 Invoke-WebRequest 更可靠
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($FeishuR2Url, $FeishuTmp)
+    
+    if (Test-Path $FeishuTmp) {
+        Write-Host "  下载成功，正在安装..." -ForegroundColor Gray
+        $result = cmd /c "openclaw plugins install `"$FeishuTmp`"" 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $feishuInstalled = $true
+        } else {
+            Write-Host "  安装命令返回错误: $result" -ForegroundColor Yellow
+        }
+        Remove-Item -Path $FeishuTmp -Force -ErrorAction SilentlyContinue
+    }
 } catch {
-    Write-Warning "从 Cloudflare 下载失败，尝试 npm registry..."
+    Write-Host "  下载错误: $_" -ForegroundColor Yellow
+}
+
+if (-not $feishuInstalled) {
+    Write-Warning "从 Cloudflare 下载/安装失败，尝试 npm registry..."
     cmd /c "openclaw plugins install @m1heng-clawd/feishu" 2>$null
 }
 
