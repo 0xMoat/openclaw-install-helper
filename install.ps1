@@ -281,6 +281,9 @@ function Select-BestMirror {
     # 镜像列表：包含测试用的完整文件 URL
     # 测试下载 README 文件来验证镜像可用性
     $mirrors = @(
+        # 自建 Cloudflare Worker 代理（优先）
+        @{ Url = "https://openclaw-gh-proxy.fuyangzhen.workers.dev/https://github.com/"; TestUrl = "https://openclaw-gh-proxy.fuyangzhen.workers.dev/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy" },
+        # 公共镜像源（备用）
         @{ Url = "https://ghfast.top/https://github.com/"; TestUrl = "https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md"; Name = "ghfast.top" },
         @{ Url = "https://github.moeyy.xyz/https://github.com/"; TestUrl = "https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md"; Name = "github.moeyy.xyz" },
         @{ Url = "https://gh-proxy.com/https://github.com/"; TestUrl = "https://gh-proxy.com/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh-proxy.com" },
@@ -445,6 +448,7 @@ function Apply-GitMirror {
 function Remove-GitMirror {
     # 所有镜像前缀
     $mirrorPrefixes = @(
+        "https://openclaw-gh-proxy.fuyangzhen.workers.dev/https://github.com/",
         "https://ghfast.top/https://github.com/",
         "https://kkgithub.com/",
         "https://hub.gitmirror.com/",
