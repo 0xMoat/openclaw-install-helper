@@ -225,7 +225,7 @@ select_best_mirror() {
     # 镜像列表：镜像URL|测试URL|名称
     local mirror_configs=(
         # 自建 Cloudflare Worker 代理（优先）
-        "https://openclaw-gh-proxy.fuyangzhen.workers.dev/https://github.com/|https://openclaw-gh-proxy.fuyangzhen.workers.dev/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy"
+        "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/|https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy"
         # 公共镜像源（备用）
         "https://ghfast.top/https://github.com/|https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md|ghfast.top"
         "https://github.moeyy.xyz/https://github.com/|https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md|github.moeyy.xyz"
@@ -362,7 +362,7 @@ apply_git_mirror() {
 remove_git_mirror() {
     # 所有镜像前缀
     local prefixes=(
-        "https://openclaw-gh-proxy.fuyangzhen.workers.dev/https://github.com/"
+        "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"
         "https://ghfast.top/https://github.com/"
         "https://kkgithub.com/"
         "https://hub.gitmirror.com/"
