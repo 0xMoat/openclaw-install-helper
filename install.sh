@@ -668,15 +668,30 @@ if [[ "${SKIP_SKILLS:-}" != "1" ]]; then
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
 
-    # 临时配置 Git 镜像以解决 GitHub 访问问题
-    SKILLS_MIRROR=$(select_best_mirror)
-    apply_git_mirror "$SKILLS_MIRROR"
+    # 从 Cloudflare R2 下载 skills 包
+    SKILLS_R2_URL="https://packages.mintmind.io/anthropics-skills.tar.gz"
+    SKILLS_TMP="/tmp/anthropics-skills.tar.gz"
+    SKILLS_DIR="/tmp/anthropics-skills"
 
-    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
-
-    # 恢复 Git 配置
-    remove_git_mirror
-    print_success "Git 配置已恢复"
+    # 下载并解压
+    if curl -sL -o "$SKILLS_TMP" "$SKILLS_R2_URL" && [[ -f "$SKILLS_TMP" ]]; then
+        rm -rf "$SKILLS_DIR"
+        mkdir -p "$SKILLS_DIR"
+        tar -xzf "$SKILLS_TMP" -C "$SKILLS_DIR" --strip-components=1
+        
+        # 从本地目录安装技能
+        npx -y skills add "$SKILLS_DIR" --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
+        
+        # 清理临时文件
+        rm -rf "$SKILLS_TMP" "$SKILLS_DIR"
+    else
+        print_warning "从 Cloudflare 下载失败，尝试 GitHub..."
+        # 临时配置 Git 镜像
+        SKILLS_MIRROR=$(select_best_mirror)
+        apply_git_mirror "$SKILLS_MIRROR"
+        npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
+        remove_git_mirror
+    fi
 
     print_success "文件处理技能安装完成"
 
