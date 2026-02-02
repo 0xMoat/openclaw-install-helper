@@ -481,7 +481,13 @@ fi
 # ============================================================
 # 步骤 3: 配置 Git 镜像（解决 GitHub 访问问题）
 # ============================================================
-BEST_MIRROR=$(select_best_mirror)
+# 检测环境变量 GITHUB_MIRROR（支持自定义镜像源）
+if [[ -n "$GITHUB_MIRROR" ]]; then
+    print_info "使用自定义 GitHub 镜像: $GITHUB_MIRROR"
+    BEST_MIRROR="$GITHUB_MIRROR"
+else
+    BEST_MIRROR=$(select_best_mirror)
+fi
 apply_git_mirror "$BEST_MIRROR"
 if [[ -n "$BEST_MIRROR" ]]; then
     print_success "Git 镜像配置完成"

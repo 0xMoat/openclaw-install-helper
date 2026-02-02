@@ -692,7 +692,13 @@ if ($needInstallNode) {
 # ============================================================
 # 步骤 3: 配置 Git 镜像（解决 GitHub 访问问题）
 # ============================================================
-$bestMirror = Select-BestMirror
+# 检测环境变量 GITHUB_MIRROR（支持自定义镜像源）
+$bestMirror = $env:GITHUB_MIRROR
+if (-not [string]::IsNullOrEmpty($bestMirror)) {
+    Write-Info "使用自定义 GitHub 镜像: $bestMirror"
+} else {
+    $bestMirror = Select-BestMirror
+}
 Apply-GitMirror $bestMirror
 if (-not [string]::IsNullOrEmpty($bestMirror)) {
     Write-Success "Git 镜像配置完成"

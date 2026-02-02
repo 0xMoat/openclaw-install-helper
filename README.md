@@ -84,6 +84,30 @@ Node.js LTS (独立安装)
 | Windows | Windows 10 | winget（可选，脚本会自动处理） |
 | macOS | macOS 10.15+ | Homebrew（自动安装） |
 
+## 网络问题解决方案
+
+脚本会自动测试并选择最快的 GitHub 镜像源。如果所有镜像都不可用，你可以：
+
+### 方法 1：使用自定义镜像（推荐）
+
+部署自己的 Cloudflare Worker 代理（免费），详见 [cloudflare-worker/README.md](./cloudflare-worker/README.md)
+
+**Windows PowerShell:**
+```powershell
+$env:GITHUB_MIRROR = "https://你的worker地址.workers.dev/https://github.com/"
+Set-ExecutionPolicy Bypass -Scope Process -Force; $ProgressPreference='SilentlyContinue'; iex ([Text.Encoding]::UTF8.GetString((iwr 'https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1' -UseBasicParsing).Content))
+```
+
+**macOS/Linux:**
+```bash
+export GITHUB_MIRROR="https://你的worker地址.workers.dev/https://github.com/"
+curl -fsSL https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.sh | bash
+```
+
+### 方法 2：使用 VPN 或代理
+
+配置全局代理后直接运行安装脚本即可。
+
 ## 常见问题
 
 ### Windows: 无法运行脚本
