@@ -715,16 +715,20 @@ if (Test-Command "openclaw") {
 
     # 优先从 R2 安装，如果失败则回退到 npm registry
     $r2InstallSuccess = $false
+    Write-Host "  正在下载 OpenClaw（约 12MB），请稍候..." -ForegroundColor Gray
     try {
-        npm install -g $OpenclawR2Url --progress --loglevel=notice
-        $r2InstallSuccess = $true
+        # 使用 & 运算符直接执行，保持输出
+        & npm install -g $OpenclawR2Url --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
+        if ($LASTEXITCODE -eq 0) {
+            $r2InstallSuccess = $true
+        }
     } catch {
         $r2InstallSuccess = $false
     }
 
     if (-not $r2InstallSuccess -or -not (Test-Command "openclaw")) {
         Write-Warning "从 Cloudflare 下载失败，尝试 npm registry..."
-        npm install -g openclaw --progress --loglevel=notice
+        & npm install -g openclaw --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
     }
 
     Refresh-Path
