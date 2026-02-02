@@ -53,6 +53,26 @@ try { npm rm -g openclaw 2>$null } catch {}
 # bun
 try { bun remove -g openclaw 2>$null } catch {}
 
+# 手动删除 npm 全局目录下的 openclaw 相关文件（确保彻底清理）
+$npmGlobalDir = "$env:APPDATA\npm"
+if (Test-Path $npmGlobalDir) {
+    # 删除模块目录
+    $openclaModuleDir = "$npmGlobalDir\node_modules\openclaw"
+    if (Test-Path $openclaModuleDir) {
+        Remove-Item -Recurse -Force $openclaModuleDir -ErrorAction SilentlyContinue
+        Write-Host "  已删除: $openclaModuleDir" -ForegroundColor Gray
+    }
+    
+    # 删除 shim 文件
+    @("openclaw", "openclaw.cmd", "openclaw.ps1") | ForEach-Object {
+        $shimPath = "$npmGlobalDir\$_"
+        if (Test-Path $shimPath) {
+            Remove-Item -Force $shimPath -ErrorAction SilentlyContinue
+            Write-Host "  已删除: $shimPath" -ForegroundColor Gray
+        }
+    }
+}
+
 Write-Done "CLI 已卸载"
 
 # ============================================================

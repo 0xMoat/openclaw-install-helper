@@ -708,16 +708,40 @@ Write-Step "检查 OpenClaw..."
 # Cloudflare R2 托管的包 URL（避免 GitHub 访问问题）
 $OpenclawR2Url = "https://packages.mintmind.io/openclaw-2026.1.30.tgz"
 
+# 检测 openclaw 是否已安装且可正常运行
+$openclawWorking = $false
 if (Test-Command "openclaw") {
+    # 验证是否真的可以运行
+    try {
+        $null = cmd /c "openclaw --version" 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $openclawWorking = $true
+        }
+    } catch {}
+}
+
+if ($openclawWorking) {
     Write-Success "OpenClaw 已安装"
 } else {
-    Write-Host "正在安装 OpenClaw（从 Cloudflare 下载）..." -ForegroundColor Yellow
+    if (Test-Command "openclaw") {
+        Write-Warning "检测到损坏的 OpenClaw 安装，正在修复..."
+    } else {
+        Write-Host "正在安装 OpenClaw（从 Cloudflare 下载）..." -ForegroundColor Yellow
+    }
 
     # 先清理可能存在的损坏安装
     $openclawDir = "$env:APPDATA\npm\node_modules\openclaw"
     if (Test-Path $openclawDir) {
         Write-Host "  清理旧安装..." -ForegroundColor Gray
         Remove-Item -Recurse -Force $openclawDir -ErrorAction SilentlyContinue
+    }
+    
+    # 删除残留的 shim 文件
+    @("openclaw", "openclaw.cmd", "openclaw.ps1") | ForEach-Object {
+        $shimPath = "$env:APPDATA\npm\$_"
+        if (Test-Path $shimPath) {
+            Remove-Item -Force $shimPath -ErrorAction SilentlyContinue
+        }
     }
 
     # 使用 --ignore-scripts 避免 node-llama-cpp postinstall 失败导致安装不完整
