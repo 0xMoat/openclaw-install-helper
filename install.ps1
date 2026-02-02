@@ -1004,7 +1004,7 @@ if ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey("NoEcho,Includ
 
 if ([Environment]::UserInteractive) {
     try {
-        Write-Host -NoNewline "飞书 App ID (直接回车跳过): " -ForegroundColor Green
+        Write-Host -NoNewline "飞书 App ID: " -ForegroundColor Green
         if ([Console]::IsInputRedirected) {
             $feishuAppId = $Host.UI.ReadLine()
         } else {
@@ -1101,7 +1101,7 @@ Write-Host "  ╔═════════════════════
 Write-Host "  ║                     配置完成!                         ║" -ForegroundColor Green
 Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ║  已连接您的feishu机器人，请在飞书中开始使用！         ║" -ForegroundColor Green
+Write-Host "  ║  已连接您的飞书机器人，请在飞书中开始使用！           ║" -ForegroundColor Green
 Write-Host "  ║  也可以打开浏览器访问 http://127.0.0.1:18789 开始使用!║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ║  常用命令:                                            ║" -ForegroundColor Green
