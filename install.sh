@@ -561,7 +561,18 @@ print_success "Git 配置已恢复"
 # ============================================================
 print_step "安装飞书插件..."
 
-openclaw plugins install @m1heng-clawd/feishu < /dev/null
+# Cloudflare R2 托管的飞书插件 URL
+FEISHU_R2_URL="https://packages.mintmind.io/feishu-0.1.6.tgz"
+FEISHU_TMP="/tmp/feishu-plugin.tgz"
+
+# 优先从 R2 下载安装，如果失败则从 npm 安装
+if curl -sL -o "$FEISHU_TMP" "$FEISHU_R2_URL" && [[ -f "$FEISHU_TMP" ]]; then
+    openclaw plugins install "$FEISHU_TMP" < /dev/null
+    rm -f "$FEISHU_TMP"
+else
+    print_warning "从 Cloudflare 下载失败，尝试 npm registry..."
+    openclaw plugins install @m1heng-clawd/feishu < /dev/null
+fi
 
 print_success "飞书插件安装完成"
 

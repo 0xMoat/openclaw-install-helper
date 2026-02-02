@@ -809,8 +809,20 @@ if ($npmCmd) {
 # 设置环境变量让子进程继承
 [System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Process")
 
-# 使用 cmd /c 运行 openclaw（解决 Windows 上 spawn 找不到 npm 的问题）
-cmd /c "openclaw plugins install @m1heng-clawd/feishu" 2>$null
+# Cloudflare R2 托管的飞书插件 URL
+$FeishuR2Url = "https://packages.mintmind.io/feishu-0.1.6.tgz"
+$FeishuTmp = "$env:TEMP\feishu-plugin.tgz"
+
+# 优先从 R2 下载安装，如果失败则从 npm 安装
+try {
+    Write-Host "  从 Cloudflare 下载飞书插件..." -ForegroundColor Gray
+    Invoke-WebRequest -Uri $FeishuR2Url -OutFile $FeishuTmp -UseBasicParsing -ErrorAction Stop
+    cmd /c "openclaw plugins install `"$FeishuTmp`"" 2>$null
+    Remove-Item -Path $FeishuTmp -Force -ErrorAction SilentlyContinue
+} catch {
+    Write-Warning "从 Cloudflare 下载失败，尝试 npm registry..."
+    cmd /c "openclaw plugins install @m1heng-clawd/feishu" 2>$null
+}
 
 Write-Success "飞书插件安装完成"
 
