@@ -222,21 +222,12 @@ test_mirror_with_timing() {
 select_best_mirror() {
     print_step "并发测试 GitHub 镜像源..." >&2
 
-    # 镜像列表：镜像URL|测试URL|名称
+    # 镜像列表（简化版）：只保留自建 Cloudflare 代理
     local mirror_configs=(
         # 自建 Cloudflare Worker 代理（自定义域名，优先）
         "https://openclaw.mintmind.io/https://github.com/|https://openclaw.mintmind.io/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy"
         # 自建 Cloudflare Worker 代理（workers.dev 备用）
         "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/|https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md|openclaw-proxy-workers"
-        # 公共镜像源（备用）
-        "https://ghfast.top/https://github.com/|https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md|ghfast.top"
-        "https://github.moeyy.xyz/https://github.com/|https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md|github.moeyy.xyz"
-        "https://gh-proxy.com/https://github.com/|https://gh-proxy.com/https://github.com/npm/cli/raw/latest/README.md|gh-proxy.com"
-        "https://mirror.ghproxy.com/https://github.com/|https://mirror.ghproxy.com/https://github.com/npm/cli/raw/latest/README.md|ghproxy.com"
-        "https://gh.qninq.cn/https://github.com/|https://gh.qninq.cn/https://github.com/npm/cli/raw/latest/README.md|gh.qninq.cn"
-        "https://kkgithub.com/|https://raw.kkgithub.com/npm/cli/latest/README.md|kkgithub.com"
-        "https://hub.gitmirror.com/|https://raw.gitmirror.com/npm/cli/latest/README.md|gitmirror.com"
-        "https://gh.api.99988866.xyz/https://github.com/|https://gh.api.99988866.xyz/https://github.com/npm/cli/raw/latest/README.md|gh.api.99988866.xyz"
     )
 
     # 创建临时目录存放测试结果
@@ -309,7 +300,7 @@ select_best_mirror() {
     fi
 }
 
-# 应用镜像配置
+# 应用镜像配置（简化版）
 apply_git_mirror() {
     local mirror_url="$1"
 
@@ -318,47 +309,21 @@ apply_git_mirror() {
     fi
 
     # 辅助函数：配置单个镜像的所有 URL 重定向
-    # 注意：使用 --add 来添加多个 insteadOf 值，而不是覆盖
     set_mirror_config() {
         local prefix="$1"
-        # 先清除可能存在的旧配置
         git config --global --unset-all url."$prefix".insteadOf 2>/dev/null || true
-        # HTTPS URL（使用 --add 添加第一个）
         git config --global --add url."$prefix".insteadOf "https://github.com/"
-        # SSH URL (npm 的 git 依赖使用这种格式)
         git config --global --add url."$prefix".insteadOf "ssh://git@github.com/"
-        # Git SSH 短格式
         git config --global --add url."$prefix".insteadOf "git@github.com:"
     }
 
-    # 根据镜像 URL 直接配置对应的 insteadOf
+    # 配置自建代理镜像
     case "$mirror_url" in
         *mintmind.io*)
             set_mirror_config "https://openclaw.mintmind.io/https://github.com/"
             ;;
-        *ghfast.top*)
-            set_mirror_config "https://ghfast.top/https://github.com/"
-            ;;
-        *kkgithub.com*)
-            set_mirror_config "https://kkgithub.com/"
-            ;;
-        *gitmirror.com*)
-            set_mirror_config "https://hub.gitmirror.com/"
-            ;;
-        *ghproxy.com*)
-            set_mirror_config "https://mirror.ghproxy.com/https://github.com/"
-            ;;
-        *gh.qninq.cn*)
-            set_mirror_config "https://gh.qninq.cn/https://github.com/"
-            ;;
-        *gh.api.99988866.xyz*)
-            set_mirror_config "https://gh.api.99988866.xyz/https://github.com/"
-            ;;
-        *github.moeyy.xyz*)
-            set_mirror_config "https://github.moeyy.xyz/https://github.com/"
-            ;;
-        *gh-proxy.com*)
-            set_mirror_config "https://gh-proxy.com/https://github.com/"
+        *workers.dev*)
+            set_mirror_config "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"
             ;;
         *)
             set_mirror_config "$mirror_url"
@@ -366,32 +331,17 @@ apply_git_mirror() {
     esac
 }
 
-# 清除镜像配置
+# 清除镜像配置（简化版）
 remove_git_mirror() {
-    # 所有镜像前缀
+    # 自建代理前缀
     local prefixes=(
         "https://openclaw.mintmind.io/https://github.com/"
         "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"
-        "https://ghfast.top/https://github.com/"
-        "https://kkgithub.com/"
-        "https://hub.gitmirror.com/"
-        "https://mirror.ghproxy.com/https://github.com/"
-        "https://gh.qninq.cn/https://github.com/"
-        "https://gh.api.99988866.xyz/https://github.com/"
-        "https://github.moeyy.xyz/https://github.com/"
-        "https://gh-proxy.com/https://github.com/"
-        "https://gitclone.com/github.com/"
-        "https://bgithub.xyz/"
     )
 
-    # 清除所有可能的镜像配置
     for prefix in "${prefixes[@]}"; do
         git config --global --unset url."$prefix".insteadOf 2>/dev/null || true
     done
-
-    # 额外清除可能的 SSH 和 git@ 格式的源地址配置
-    git config --global --unset-all url.*.insteadOf "ssh://git@github.com/" 2>/dev/null || true
-    git config --global --unset-all url.*.insteadOf "git@github.com:" 2>/dev/null || true
 }
 
 # ============================================================
@@ -492,19 +442,8 @@ if $need_install_node; then
 fi
 
 # ============================================================
-# 步骤 3: 配置 Git 镜像（解决 GitHub 访问问题）
+# 注：GitHub 镜像配置已移至回退机制，核心安装不再需要 GitHub
 # ============================================================
-# 检测环境变量 GITHUB_MIRROR（支持自定义镜像源）
-if [[ -n "$GITHUB_MIRROR" ]]; then
-    print_info "使用自定义 GitHub 镜像: $GITHUB_MIRROR"
-    BEST_MIRROR="$GITHUB_MIRROR"
-else
-    BEST_MIRROR=$(select_best_mirror)
-fi
-apply_git_mirror "$BEST_MIRROR"
-if [[ -n "$BEST_MIRROR" ]]; then
-    print_success "Git 镜像配置完成"
-fi
 
 # ============================================================
 # 步骤 3.5: 选择最佳 NPM 镜像源
@@ -549,12 +488,7 @@ else
     fi
 fi
 
-# ============================================================
-# 清理：安装完成后移除 Git 镜像配置（可选）
-# ============================================================
-print_step "清理 Git 镜像配置..."
-remove_git_mirror
-print_success "Git 配置已恢复"
+
 
 # ============================================================
 # 步骤 5: 安装飞书插件

@@ -278,22 +278,12 @@ function Download-File {
 function Select-BestMirror {
     Write-Step "并发测试 GitHub 镜像源..."
 
-    # 镜像列表：包含测试用的完整文件 URL
-    # 测试下载 README 文件来验证镜像可用性
+    # 镜像列表（简化版）：只保留自建 Cloudflare 代理
     $mirrors = @(
         # 自建 Cloudflare Worker 代理（自定义域名，优先）
         @{ Url = "https://openclaw.mintmind.io/https://github.com/"; TestUrl = "https://openclaw.mintmind.io/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy" },
         # 自建 Cloudflare Worker 代理（workers.dev 备用）
-        @{ Url = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"; TestUrl = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy-workers" },
-        # 公共镜像源（备用）
-        @{ Url = "https://ghfast.top/https://github.com/"; TestUrl = "https://ghfast.top/https://github.com/npm/cli/raw/latest/README.md"; Name = "ghfast.top" },
-        @{ Url = "https://github.moeyy.xyz/https://github.com/"; TestUrl = "https://github.moeyy.xyz/https://github.com/npm/cli/raw/latest/README.md"; Name = "github.moeyy.xyz" },
-        @{ Url = "https://gh-proxy.com/https://github.com/"; TestUrl = "https://gh-proxy.com/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh-proxy.com" },
-        @{ Url = "https://mirror.ghproxy.com/https://github.com/"; TestUrl = "https://mirror.ghproxy.com/https://github.com/npm/cli/raw/latest/README.md"; Name = "ghproxy.com" },
-        @{ Url = "https://gh.qninq.cn/https://github.com/"; TestUrl = "https://gh.qninq.cn/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh.qninq.cn" },
-        @{ Url = "https://kkgithub.com/"; TestUrl = "https://raw.kkgithub.com/npm/cli/latest/README.md"; Name = "kkgithub.com" },
-        @{ Url = "https://hub.gitmirror.com/"; TestUrl = "https://raw.gitmirror.com/npm/cli/latest/README.md"; Name = "gitmirror.com" },
-        @{ Url = "https://gh.api.99988866.xyz/https://github.com/"; TestUrl = "https://gh.api.99988866.xyz/https://github.com/npm/cli/raw/latest/README.md"; Name = "gh.api.99988866.xyz" }
+        @{ Url = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"; TestUrl = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy-workers" }
     )
 
     Write-Host "  正在并发测试 $($mirrors.Count) 个镜像源..." -ForegroundColor Gray
@@ -702,19 +692,8 @@ if ($needInstallNode) {
 }
 
 # ============================================================
-# 步骤 3: 配置 Git 镜像（解决 GitHub 访问问题）
+# 注：GitHub 镜像配置已移至回退机制，核心安装不再需要 GitHub
 # ============================================================
-# 检测环境变量 GITHUB_MIRROR（支持自定义镜像源）
-$bestMirror = $env:GITHUB_MIRROR
-if (-not [string]::IsNullOrEmpty($bestMirror)) {
-    Write-Info "使用自定义 GitHub 镜像: $bestMirror"
-} else {
-    $bestMirror = Select-BestMirror
-}
-Apply-GitMirror $bestMirror
-if (-not [string]::IsNullOrEmpty($bestMirror)) {
-    Write-Success "Git 镜像配置完成"
-}
 
 # ============================================================
 # 步骤 3.5: 选择最佳 NPM 镜像源
@@ -765,12 +744,7 @@ if (Test-Command "openclaw") {
     }
 }
 
-# ============================================================
-# 清理：安装完成后移除 Git 镜像配置（可选）
-# ============================================================
-Write-Step "清理 Git 镜像配置..."
-Remove-GitMirror
-Write-Success "Git 配置已恢复"
+
 
 # ============================================================
 # 步骤 5: 安装飞书插件
