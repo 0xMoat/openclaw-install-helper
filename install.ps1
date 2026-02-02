@@ -21,132 +21,68 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $ErrorActionPreference = "Stop"
 
 # ============================================================
+# 版本配置 (Versions)
+# ============================================================
+$verOpenClaw = "2026.1.30"
+$verFeishu = "0.1.6"
+$verSkills = "1.3.1"
+$verClipboard = "0.3.2"
+$verTag = "1.0.1" # Gitee Release Tag
+
+# ============================================================
 # NPM 镜像源测速与选择（并发测试）
 # ============================================================
 $script:originalNpmRegistry = ""
 $script:selectedNpmRegistry = ""
 
 # 并发选择最快的可用 NPM 镜像源
+# 简单的串行测速（更稳定，避免多线程 Runspace 报错）
 function Select-BestNpmRegistry {
-    Write-Step "并发测试 NPM 镜像源..."
+    Write-Step "测试 NPM 镜像源..."
 
-    $registries = @(
-        @{ Url = "https://registry.npmmirror.com/"; Name = "淘宝源(阿里)" },
-        @{ Url = "https://mirrors.cloud.tencent.com/npm/"; Name = "腾讯云源" },
-        @{ Url = "https://mirrors.huaweicloud.com/repository/npm/"; Name = "华为云源" },
-        @{ Url = "https://registry.npmjs.org/"; Name = "官方源(npmjs)" }
-    )
-
-    # 保存原始镜像源配置
+    $taobao = "https://registry.npmmirror.com/"
+    $official = "https://registry.npmjs.org/"
+    
+    # 优先测试淘宝源
+    Write-Host "  正在连接淘宝源..." -NoNewline
     try {
-        $script:originalNpmRegistry = npm config get registry 2>$null
-    } catch {}
-
-    Write-Host "  正在并发测试 $($registries.Count) 个镜像源..." -ForegroundColor Gray
-
-    # 测试脚本块
-    $testScript = {
-        param($registryUrl, $registryName)
-        try {
-            $testUrl = "${registryUrl}lodash"
-            $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-            $request = [System.Net.WebRequest]::Create($testUrl)
-            $request.Timeout = 8000
-            $request.Method = "GET"
-
-            try {
-                $response = $request.GetResponse()
-                $response.Close()
-                $stopwatch.Stop()
-                return @{
-                    Success = $true
-                    Time = $stopwatch.ElapsedMilliseconds
-                    Url = $registryUrl
-                    Name = $registryName
-                }
-            } catch {
-                return @{
-                    Success = $false
-                    Time = -1
-                    Url = $registryUrl
-                    Name = $registryName
-                }
-            }
-        } catch {
-            return @{
-                Success = $false
-                Time = -1
-                Url = $registryUrl
-                Name = $registryName
-            }
+        $request = [System.Net.WebRequest]::Create("${taobao}lodash")
+        $request.Timeout = 3000 # 3秒超时
+        $request.Method = "HEAD"
+        $response = $request.GetResponse()
+        if ($response.StatusCode -eq "OK") {
+            Write-Host " [OK]" -ForegroundColor Green
+            $script:selectedNpmRegistry = $taobao
+            npm config set registry $taobao 2>$null
+            Write-Success "已选择: 淘宝源"
+            return
         }
+    } catch {
+        Write-Host " [超时/失败]" -ForegroundColor Red
     }
 
-    # 创建并发任务
-    $runspacePool = [runspacefactory]::CreateRunspacePool(1, $registries.Count)
-    $runspacePool.Open()
-
-    $jobs = @()
-    foreach ($registry in $registries) {
-        $powershell = [powershell]::Create().AddScript($testScript).AddArgument($registry.Url).AddArgument($registry.Name)
-        $powershell.RunspacePool = $runspacePool
-        $jobs += @{
-            PowerShell = $powershell
-            Handle = $powershell.BeginInvoke()
-            Registry = $registry
+    # 如果淘宝失败，测试官方源
+    Write-Host "  正在连接官方源..." -NoNewline
+    try {
+        $request = [System.Net.WebRequest]::Create("${official}lodash")
+        $request.Timeout = 5000
+        $request.Method = "HEAD"
+        $response = $request.GetResponse()
+        if ($response.StatusCode -eq "OK") {
+            Write-Host " [OK]" -ForegroundColor Green
+            $script:selectedNpmRegistry = $official
+            npm config set registry $official 2>$null
+            Write-Success "已选择: 官方源"
+            return
         }
+    } catch {
+        Write-Host " [超时/失败]" -ForegroundColor Red
     }
 
-    # 等待所有任务完成（最多 10 秒）
-    $timeout = [DateTime]::Now.AddSeconds(10)
-    while ($jobs | Where-Object { -not $_.Handle.IsCompleted }) {
-        if ([DateTime]::Now -gt $timeout) {
-            break
-        }
-        Start-Sleep -Milliseconds 100
-    }
-
-    # 收集结果
-    $results = @()
-    foreach ($job in $jobs) {
-        try {
-            if ($job.Handle.IsCompleted) {
-                $result = $job.PowerShell.EndInvoke($job.Handle)
-                if ($result -and $result.Success) {
-                    Write-Host "  $($result.Name): " -NoNewline
-                    Write-Host "$($result.Time)ms" -ForegroundColor Green
-                    $results += $result
-                } else {
-                    Write-Host "  $($job.Registry.Name): " -NoNewline
-                    Write-Host "不可用" -ForegroundColor Red
-                }
-            } else {
-                Write-Host "  $($job.Registry.Name): " -NoNewline
-                Write-Host "超时" -ForegroundColor Red
-            }
-        } catch {
-            Write-Host "  $($job.Registry.Name): " -NoNewline
-            Write-Host "错误" -ForegroundColor Red
-        } finally {
-            $job.PowerShell.Dispose()
-        }
-    }
-
-    $runspacePool.Close()
-    $runspacePool.Dispose()
-
-    # 按响应时间排序，选择最快的
-    if ($results.Count -gt 0) {
-        $best = $results | Sort-Object { $_.Time } | Select-Object -First 1
-        Write-Success "已选择最快 NPM 镜像源: $($best.Name) ($($best.Time)ms)"
-        $script:selectedNpmRegistry = $best.Url
-        npm config set registry $best.Url 2>$null
-    } else {
-        Write-Warning "所有镜像源均不可用，使用淘宝镜像源"
-        $script:selectedNpmRegistry = "https://registry.npmmirror.com/"
-        npm config set registry "https://registry.npmmirror.com/" 2>$null
-    }
+    # 保底
+    Write-Warning "所有镜像源检测失败，强制使用淘宝源"
+    $script:selectedNpmRegistry = $taobao
+    npm config set registry $taobao 2>$null
 }
 
 function Restore-NpmRegistry {
@@ -273,126 +209,30 @@ function Download-File {
 # GitHub 镜像源测速与选择（并发测试）
 # ============================================================
 
-# 并发选择最快的可用 GitHub 镜像源
-# 返回: 镜像 URL 字符串，如果没有可用镜像返回空字符串
+# 简单的串行测速（GitHub 镜像）
 function Select-BestMirror {
-    Write-Step "并发测试 GitHub 镜像源..."
+   Write-Step "测试 GitHub 镜像源..."
 
-    # 镜像列表（简化版）：只保留自建 Cloudflare 代理
-    $mirrors = @(
-        # 自建 Cloudflare Worker 代理（自定义域名，优先）
-        @{ Url = "https://openclaw.mintmind.io/https://github.com/"; TestUrl = "https://openclaw.mintmind.io/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy" },
-        # 自建 Cloudflare Worker 代理（workers.dev 备用）
-        @{ Url = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/"; TestUrl = "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/npm/cli/raw/latest/README.md"; Name = "openclaw-proxy-workers" }
-    )
+   $mirrorUrl = "https://openclaw.mintmind.io/https://github.com/"
+   $testUrl = "https://openclaw.mintmind.io/https://github.com/npm/cli/raw/latest/README.md"
+   
+   Write-Host "  正在连接 openclaw-proxy..." -NoNewline
+   try {
+       $request = [System.Net.WebRequest]::Create($testUrl)
+       $request.Timeout = 5000 # 5秒超时
+       $request.Method = "HEAD"
+       $response = $request.GetResponse()
+       if ($response.StatusCode -eq "OK") {
+           Write-Host " [OK]" -ForegroundColor Green
+           Write-Success "已选择: openclaw-proxy"
+           return $mirrorUrl
+       }
+   } catch {
+       Write-Host " [超时/失败]" -ForegroundColor Red
+   }
 
-    Write-Host "  正在并发测试 $($mirrors.Count) 个镜像源..." -ForegroundColor Gray
-
-    # 测试脚本块 - 使用 HTTP 请求测试
-    $testScript = {
-        param($mirrorUrl, $testUrl, $mirrorName)
-        try {
-            $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-
-            # 使用 WebRequest 测试，设置超时 8 秒
-            $request = [System.Net.WebRequest]::Create($testUrl)
-            $request.Method = "HEAD"
-            $request.Timeout = 8000
-            $request.AllowAutoRedirect = $true
-
-            $response = $request.GetResponse()
-            $statusCode = [int]$response.StatusCode
-            $response.Close()
-
-            $stopwatch.Stop()
-
-            if ($statusCode -ge 200 -and $statusCode -lt 400) {
-                return @{
-                    Success = $true
-                    Time = $stopwatch.ElapsedMilliseconds
-                    Url = $mirrorUrl
-                    Name = $mirrorName
-                }
-            } else {
-                return @{
-                    Success = $false
-                    Time = -1
-                    Url = $mirrorUrl
-                    Name = $mirrorName
-                }
-            }
-        } catch {
-            return @{
-                Success = $false
-                Time = -1
-                Url = $mirrorUrl
-                Name = $mirrorName
-            }
-        }
-    }
-
-    # 创建并发任务
-    $runspacePool = [runspacefactory]::CreateRunspacePool(1, $mirrors.Count)
-    $runspacePool.Open()
-
-    $jobs = @()
-    foreach ($mirror in $mirrors) {
-        $powershell = [powershell]::Create().AddScript($testScript).AddArgument($mirror.Url).AddArgument($mirror.TestUrl).AddArgument($mirror.Name)
-        $powershell.RunspacePool = $runspacePool
-        $jobs += @{
-            PowerShell = $powershell
-            Handle = $powershell.BeginInvoke()
-            Mirror = $mirror
-        }
-    }
-
-    # 等待所有任务完成（最多 15 秒）
-    $timeout = [DateTime]::Now.AddSeconds(15)
-    while ($jobs | Where-Object { -not $_.Handle.IsCompleted }) {
-        if ([DateTime]::Now -gt $timeout) {
-            break
-        }
-        Start-Sleep -Milliseconds 100
-    }
-
-    # 收集结果
-    $results = @()
-    foreach ($job in $jobs) {
-        try {
-            if ($job.Handle.IsCompleted) {
-                $result = $job.PowerShell.EndInvoke($job.Handle)
-                if ($result -and $result.Success) {
-                    Write-Host "  $($result.Name): " -NoNewline
-                    Write-Host "$($result.Time)ms" -ForegroundColor Green
-                    $results += $result
-                } else {
-                    Write-Host "  $($job.Mirror.Name): " -NoNewline
-                    Write-Host "不可用" -ForegroundColor Red
-                }
-            } else {
-                Write-Host "  $($job.Mirror.Name): " -NoNewline
-                Write-Host "超时" -ForegroundColor Red
-            }
-        } catch {
-            Write-Host "  $($job.Mirror.Name): " -NoNewline
-            Write-Host "错误" -ForegroundColor Red
-        } finally {
-            $job.PowerShell.Dispose()
-        }
-    }
-
-    $runspacePool.Close()
-    $runspacePool.Dispose()
-
-    # 按响应时间排序，选择最快的
-    if ($results.Count -gt 0) {
-        $best = $results | Sort-Object { $_.Time } | Select-Object -First 1
-        Write-Success "已选择最快镜像源: $($best.Name) ($($best.Time)ms)"
-        return $best.Url
-    } else {
-        Write-Warning "所有镜像源均不可用，将直接连接 GitHub"
-        return ""
-    }
+   Write-Warning "所有镜像源检测失败，将直接连接 GitHub"
+   return ""
 }
 
 # 应用镜像配置
@@ -444,6 +284,7 @@ function Apply-GitMirror {
 # 清除镜像配置
 function Remove-GitMirror {
     # 所有镜像前缀
+    # 只保留最有效的镜像源
     $mirrorPrefixes = @(
         "https://openclaw.mintmind.io/https://github.com/",
         "https://openclaw-gh-proxy.dejuanrohan1.workers.dev/https://github.com/",
@@ -461,7 +302,7 @@ function Remove-GitMirror {
 
     # 清除所有可能的镜像配置（包括 HTTPS、SSH 和 git@ 格式）
     foreach ($prefix in $mirrorPrefixes) {
-        git config --global --unset "url.$prefix.insteadOf" 2>$null
+        git config --global --unset-all "url.$prefix.insteadOf" 2>$null
     }
 
     # 额外清除可能的 SSH 和 git@ 格式的源地址配置
@@ -703,157 +544,207 @@ Select-BestNpmRegistry
 # ============================================================
 # 步骤 4: 安装 OpenClaw
 # ============================================================
+# ============================================================
+# 步骤 4: 安装 OpenClaw (Gitee 稳定版)
+# ============================================================
 Write-Step "检查 OpenClaw..."
 
-# Gitee 托管的包 URL（中国境内访问更快）
-$OpenclawR2Url = "https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/openclaw-2026.1.30.tgz"
+# 1. 检测 Node.js 运行时架构 (最准确)
+Write-Host "  正在检测 Node.js 架构..." -ForegroundColor Gray
+try {
+    $arch = cmd /c "node -p process.arch" 2>$null
+    $arch = $arch.Trim()
+} catch {
+    $arch = ""
+}
 
-# 检测 openclaw 是否已安装且可正常运行
-$openclawWorking = $false
+if ([string]::IsNullOrWhiteSpace($arch)) {
+    # 回退到环境变量检测
+    Write-Warning "无法通过 Node.js 检测架构，尝试环境变量..."
+    $sysArch = $env:PROCESSOR_ARCHITECTURE
+    if ($sysArch -eq "AMD64") {
+        $arch = "x64"
+    } elseif ($sysArch -eq "ARM64") {
+        $arch = "arm64"
+    } else {
+        $arch = "x64" # 默认回退
+    }
+}
+
+Write-Host "  目标架构: $arch" -ForegroundColor Gray
+
+# 1.5 检查并安装 VC++ 运行库 (对原生模块至关重要)
+Write-Host "  正在检查运行环境..." -ForegroundColor Gray
+$vcRedistUrl = ""
+if ($arch -eq "arm64") {
+    $vcRedistUrl = "https://aka.ms/vs/17/release/vc_redist.arm64.exe"
+} else {
+    $vcRedistUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+}
+
+# 简单粗暴但有效：直接静默安装。安装程序会自动检测，如果已安装则会快速退出。
+Write-Host "  正在准备 VC++ 运行库 (可能需要几分钟)..." -ForegroundColor Gray
+$vcRedistPath = "$env:TEMP\vc_redist.exe"
+
+try {
+    # 始终尝试下载最新版
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile($vcRedistUrl, $vcRedistPath)
+    
+    if (Test-Path $vcRedistPath) {
+        Write-Host "  正在配置系统环境 (VC++ Redist)..." -ForegroundColor Gray
+        # /install /quiet /norestart
+        $process = Start-Process -FilePath $vcRedistPath -ArgumentList "/install", "/quiet", "/norestart" -Wait -PassThru
+        
+        # 0 = 成功, 1638 = 已安装更新版本, 3010 = 需要重启
+        if ($process.ExitCode -eq 0) {
+             Write-Success "环境配置完成"
+        } elseif ($process.ExitCode -eq 1638) {
+             Write-Host "  环境已就绪 (已安装)" -ForegroundColor Gray
+        } elseif ($process.ExitCode -eq 3010) {
+             Write-Warning "环境配置完成 (需要重启生效)"
+        } else {
+             # 仅记录警告，不中断流程，因为可能是误报或已有环境
+             Write-Warning "环境配置返回代码: $($process.ExitCode)"
+        }
+        
+        Remove-Item -Path $vcRedistPath -Force -ErrorAction SilentlyContinue
+    }
+} catch {
+    # 网络错误不应阻断安装，用户可能已经安装了
+    Write-Host "  跳过环境自动配置 (网络原因)，继续安装..." -ForegroundColor Gray
+}
+
+# 2. Gitee 包链接
+$BaseUrl = "https://gitee.com/mintmind/openclaw-packages/releases/download/$verTag"
+$OpenclawUrl = "$BaseUrl/openclaw-$verOpenClaw.tgz"
+$ClipboardUrl_x64 = "$BaseUrl/mariozechner-clipboard-win32-x64-msvc-$verClipboard.tgz"
+$ClipboardUrl_arm64 = "$BaseUrl/mariozechner-clipboard-win32-arm64-msvc-$verClipboard.tgz"
+
+# 选择对应的 clipboard 包
+if ($arch -eq "arm64") {
+    $ClipboardUrl = $ClipboardUrl_arm64
+} else {
+    $ClipboardUrl = $ClipboardUrl_x64
+}
+
+# 检测是否需要重新安装
+$needInstall = $true
 if (Test-Command "openclaw") {
-    # 验证是否真的可以运行
+    # 验证是否可运行
     try {
         $null = cmd /c "openclaw --version" 2>&1
         if ($LASTEXITCODE -eq 0) {
-            $openclawWorking = $true
-        }
-    } catch {}
-}
-
-if ($openclawWorking) {
-    Write-Success "OpenClaw 已安装"
-} else {
-    if (Test-Command "openclaw") {
-        Write-Warning "检测到损坏的 OpenClaw 安装，正在修复..."
-    } else {
-        Write-Host "正在安装 OpenClaw（从 Gitee 下载）..." -ForegroundColor Yellow
-    }
-
-    # 先清理可能存在的损坏安装
-    $openclawDir = "$env:APPDATA\npm\node_modules\openclaw"
-    if (Test-Path $openclawDir) {
-        Write-Host "  清理旧安装..." -ForegroundColor Gray
-        Remove-Item -Recurse -Force $openclawDir -ErrorAction SilentlyContinue
-    }
-    
-    # 删除残留的 shim 文件
-    @("openclaw", "openclaw.cmd", "openclaw.ps1") | ForEach-Object {
-        $shimPath = "$env:APPDATA\npm\$_"
-        if (Test-Path $shimPath) {
-            Remove-Item -Force $shimPath -ErrorAction SilentlyContinue
-        }
-    }
-
-    # 使用 --ignore-scripts 避免 node-llama-cpp postinstall 失败导致安装不完整
-    $r2InstallSuccess = $false
-    Write-Host "  正在下载 OpenClaw（约 12MB），请稍候..." -ForegroundColor Gray
-    try {
-        # 使用 --ignore-scripts 跳过可能失败的 postinstall 脚本
-        & npm install -g $OpenclawR2Url --ignore-scripts --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
-        if ($LASTEXITCODE -eq 0) {
-            $r2InstallSuccess = $true
+            # 检查版本匹配
+            $currentVer = openclaw --version
+            if ($currentVer -like "*$verOpenClaw*") {
+                $needInstall = $false
+                Write-Success "OpenClaw 已安装且版本匹配 ($verOpenClaw)"
+            } else {
+                Write-Warning "版本不匹配 (当前: $currentVer, 目标: $verOpenClaw)，准备升级..."
+            }
+        } else {
+            Write-Warning "检测到 OpenClaw 安装损坏，准备重新安装..."
         }
     } catch {
-        $r2InstallSuccess = $false
+        Write-Warning "检测到 OpenClaw 安装损坏，准备重新安装..."
+    }
+} else {
+    Write-Host "正在安装 OpenClaw (从 Gitee 下载)..." -ForegroundColor Yellow
+}
+
+if ($needInstall) {
+    # 3. 清理旧安装
+    $openclawDir = "$env:APPDATA\npm\node_modules\openclaw"
+    if (Test-Path $openclawDir) {
+        Write-Host "  清理旧安装文件..." -ForegroundColor Gray
+        Remove-Item -Recurse -Force $openclawDir -ErrorAction SilentlyContinue
+    }
+    # 清理 shim
+    @("openclaw", "openclaw.cmd", "openclaw.ps1") | ForEach-Object {
+        $shimPath = "$env:APPDATA\npm\$_"
+        if (Test-Path $shimPath) { Remove-Item -Force $shimPath -ErrorAction SilentlyContinue }
     }
 
-    if (-not $r2InstallSuccess -or -not (Test-Command "openclaw")) {
-        Write-Warning "从 Gitee 下载失败，尝试 npm registry..."
-        & npm install -g openclaw --ignore-scripts --progress --loglevel=notice 2>&1 | ForEach-Object { Write-Host $_ }
+    # 4. 下载 OpenClaw
+    $OpenclawTmp = "$env:TEMP\openclaw.tgz"
+    Write-Host "  正在下载 OpenClaw (Gitee)..." -ForegroundColor Gray
+    try {
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile($OpenclawUrl, $OpenclawTmp)
+    } catch {
+        Write-Err "OpenClaw 下载失败: $_"
+        exit 1
     }
+
+    # 5. 安装 OpenClaw (跳过脚本)
+    Write-Host "  正在安装 OpenClaw核心 (跳过编译)..." -ForegroundColor Gray
+    $ErrorActionPreference = "Continue"
+    cmd /c "npm install -g `"$OpenclawTmp`" --registry=https://registry.npmmirror.com --ignore-scripts --progress --loglevel=notice"
+    $ErrorActionPreference = "Stop"
+    Remove-Item -Path $OpenclawTmp -Force -ErrorAction SilentlyContinue
 
     Refresh-Path
+    
+    # 6. 后处理：移除 node-llama-cpp 和修复 native 模块
+    if (Test-Path $openclawDir) {
+        # 6.1 移除 node-llama-cpp (不需要本地 LLM)
+        $nodeLlamaCppDir = "$openclawDir\node_modules\node-llama-cpp"
+        if (Test-Path $nodeLlamaCppDir) {
+            Write-Host "  清理无用模块 (node-llama-cpp)..." -ForegroundColor Gray
+            Remove-Item -Recurse -Force $nodeLlamaCppDir -ErrorAction SilentlyContinue
+        }
 
-    if (Test-Command "openclaw") {
-        Write-Success "OpenClaw 安装完成"
+        # 6.2 手动安装 clipboard 模块 (native)
+        Write-Host "  安装剪贴板支持 ($arch native)..." -ForegroundColor Gray
+        $ClipboardTmp = "$env:TEMP\clipboard.tgz"
+        try {
+            $webClient.DownloadFile($ClipboardUrl, $ClipboardTmp)
+            
+            # 安装到 openclaw 的 node_modules
+            if (Test-Path $ClipboardTmp) {
+                Push-Location $openclawDir
+                $ErrorActionPreference = "Continue"
+                # --no-save 避免修改 package.json, --ignore-scripts 避免触发 postinstall
+                # 但这会把包解压并替换现有的 @mariozechner/clipboard
+                cmd /c "npm install `"$ClipboardTmp`" --no-save --ignore-scripts"
+                $ErrorActionPreference = "Stop"
+                Pop-Location
+                Remove-Item -Path $ClipboardTmp -Force -ErrorAction SilentlyContinue
+                Write-Success "剪贴板模块安装完成"
+            }
+        } catch {
+            Write-Warning "剪贴板模块安装失败: $_ (可能影响剪贴板功能)"
+        }
     } else {
-        Write-Err "OpenClaw 安装失败"
-        Write-Host ""
-        Write-Host "如果仍然失败，请尝试以下方法：" -ForegroundColor Yellow
-        Write-Host "1. 使用 VPN 或代理"
-        Write-Host "2. 手动配置 Git 代理："
-        Write-Host "   git config --global http.proxy http://127.0.0.1:7890"
-        Write-Host "   git config --global https.proxy http://127.0.0.1:7890"
-        Write-Host "3. 然后重新运行: npm install -g openclaw --ignore-scripts"
+        Write-Err "OpenClaw 目录未创建，安装可能失败"
+        exit 1
+    }
+
+    # final check
+    if (Test-Command "openclaw") {
+        # 验证是否可以加载原生模块
+        try {
+            $null = cmd /c "openclaw --version" 2>&1
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "OpenClaw 安装完成"
+            } else {
+                Write-Err "OpenClaw 安装完成但无法启动"
+                Write-Host ""
+                Write-Host "可能原因: 缺少 VC++ 运行库" -ForegroundColor Yellow
+                Write-Host "请下载并安装 Microsoft Visual C++ Redistributable:"
+                Write-Host "  https://aka.ms/vs/17/release/vc_redist.$arch.exe" -ForegroundColor Cyan
+                exit 1
+            }
+        } catch {
+             Write-Err "无法执行 openclaw --version"
+        }
+    } else {
+        Write-Err "OpenClaw 安装失败，请检查 npm 日志"
         exit 1
     }
 }
 
-
-
-# ============================================================
-# 步骤 5: 安装飞书插件
-# ============================================================
-Write-Step "安装飞书插件..."
-
-# 刷新 PATH 确保 npm 可用（OpenClaw 插件安装依赖 npm）
-Refresh-Path
-
-# 确保 npm 路径在 PATH 中（即使 Test-Command 能找到，子进程也需要）
-$npmPaths = @(
-    "$env:ProgramFiles\nodejs",
-    "${env:ProgramFiles(x86)}\nodejs",
-    "$env:ProgramData\chocolatey\bin",
-    "$env:APPDATA\npm"
-)
-foreach ($npmPath in $npmPaths) {
-    if ((Test-Path $npmPath) -and ($env:Path -notlike "*$npmPath*")) {
-        $env:Path = "$npmPath;$env:Path"
-    }
-}
-
-# 验证 npm.cmd 存在（Node.js spawn 需要 .cmd 文件）
-$npmCmd = Get-Command npm.cmd -ErrorAction SilentlyContinue
-if ($npmCmd) {
-    Write-Host "  npm.cmd 路径: $($npmCmd.Source)" -ForegroundColor Gray
-} else {
-    Write-Warning "npm.cmd 未找到，尝试查找..."
-    # 尝试找到 npm.cmd
-    $nodejsPath = "$env:ProgramFiles\nodejs"
-    if (Test-Path "$nodejsPath\npm.cmd") {
-        Write-Host "  找到 npm.cmd: $nodejsPath\npm.cmd" -ForegroundColor Gray
-    }
-}
-
-# 设置环境变量让子进程继承
-[System.Environment]::SetEnvironmentVariable("Path", $env:Path, "Process")
-
-# Gitee 托管的飞书插件 URL
-$FeishuR2Url = "https://gitee.com/mintmind/openclaw-packages/releases/download/1.0.0/feishu-0.1.6.tgz"
-$FeishuTmp = "$env:TEMP\feishu-plugin.tgz"
-
-# 确保 TLS 1.2
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-# 优先从 R2 下载安装，如果失败则从 npm 安装
-$feishuInstalled = $false
-try {
-    Write-Host "  从 Gitee 下载飞书插件..." -ForegroundColor Gray
-    
-    # 使用 WebClient，比 Invoke-WebRequest 更可靠
-    $webClient = New-Object System.Net.WebClient
-    $webClient.DownloadFile($FeishuR2Url, $FeishuTmp)
-    
-    if (Test-Path $FeishuTmp) {
-        Write-Host "  下载成功，正在安装..." -ForegroundColor Gray
-        $result = cmd /c "openclaw plugins install `"$FeishuTmp`"" 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            $feishuInstalled = $true
-        } else {
-            Write-Host "  安装命令返回错误: $result" -ForegroundColor Yellow
-        }
-        Remove-Item -Path $FeishuTmp -Force -ErrorAction SilentlyContinue
-    }
-} catch {
-    Write-Host "  下载错误: $_" -ForegroundColor Yellow
-}
-
-if (-not $feishuInstalled) {
-    Write-Warning "从 Gitee 下载/安装失败，尝试 npm registry..."
-    cmd /c "openclaw plugins install @m1heng-clawd/feishu" 2>$null
-}
-
-Write-Success "飞书插件安装完成"
 
 # ============================================================
 # 完成
@@ -995,8 +886,23 @@ if ($env:SKIP_SKILLS -ne "1") {
     # 临时配置 Git 镜像以解决 GitHub 访问问题
     $skillsMirror = Select-BestMirror
     Apply-GitMirror $skillsMirror
+    
+    # 修复 skills CLI 的 bug: 它尝试在 HOME/.moltbot 创建目录但不检查父目录是否存在
+    # 修复 skills CLI 的 bug: 它尝试在 HOME/.moltbot 创建目录但不检查父目录是否存在
+    $moltbotDir = "$env:USERPROFILE\.moltbot"
+    if (Test-Path $moltbotDir) {
+        $item = Get-Item $moltbotDir
+        if (-not $item.PSIsContainer) {
+            # 如果是文件，删除它
+            Remove-Item -Force $moltbotDir
+            New-Item -ItemType Directory -Force -Path $moltbotDir | Out-Null
+        }
+    } else {
+        # 如果不存在，创建它
+        New-Item -ItemType Directory -Force -Path $moltbotDir | Out-Null
+    }
 
-    npx -y skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g 2>$null
+    npx -y skills@$verSkills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g 2>$null
 
     # 恢复 Git 配置
     Remove-GitMirror
@@ -1020,7 +926,15 @@ Write-Host "──────────────────────�
 Write-Host ""
 
 Write-Step "初始化 OpenClaw..."
-openclaw onboard --non-interactive --accept-risk --skip-daemon 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
+
+# 强制停止所有残留的 openclaw 进程，避免端口冲突导致 gateway closed
+Get-Process node, openclaw -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+
+try {
+    openclaw onboard --non-interactive --accept-risk --skip-daemon 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
+} catch {
+    Write-Warning "初始化遇到轻微错误，尝试继续..."
+}
 
 Write-Step "安装网关服务..."
 try {
@@ -1031,12 +945,35 @@ try {
     exit 1
 }
 
-Write-Step "启动网关服务..."
+Write-Step "配置静默启动脚本..."
+
+# 为了实现完全静默启动（不弹窗），我们需要借助 VBScript
+$daemonScript = "$env:USERPROFILE\.openclaw\daemon.vbs"
+$vbsContent = @"
+Set WshShell = CreateObject("WScript.Shell")
+' 0 = Hide Window, False = Do not wait for completion
+WshShell.Run "openclaw gateway start", 0, False
+"@
+Set-Content -Path $daemonScript -Value $vbsContent -Encoding UTF8
+
+Write-Step "启动网关服务 (后台静默)..."
 try {
-    openclaw gateway start 2>&1
-    # 等待服务启动
-    Start-Sleep -Seconds 3
-    Write-Success "网关服务启动完成"
+    # 使用 wscript 运行 vbs 实现彻底隐藏
+    Start-Process wscript -ArgumentList "`"$daemonScript`"" -WindowStyle Hidden
+    
+    # 等待服务预热
+    Start-Sleep -Seconds 5
+    
+    # 验证是否启动成功 (通过检查端口或进程)
+    if (Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -like "*openclaw*" -or $_.CommandLine -like "*openclaw*" }) {
+         Write-Success "网关服务已在后台启动"
+    } else {
+         # 只要没报错，通常就是启动了 (因为是静默的，进程可能不易检测)
+         Write-Success "网关服务启动指令已发送"
+    }
+    
+    Write-Host "  提示: 您也可以通过运行以下文件手动静默启动:" -ForegroundColor Gray
+    Write-Host "  $daemonScript" -ForegroundColor Gray
 } catch {
     Write-Err "网关服务启动失败"
     exit 1
@@ -1060,24 +997,53 @@ Write-Host ""
 $feishuAppId = ""
 $feishuAppSecret = ""
 
-if ([Environment]::UserInteractive) {
-    Write-Host -NoNewline "飞书 App ID: "
-    if ([Console]::IsInputRedirected) {
-        $feishuAppId = $Host.UI.ReadLine()
-    } else {
-        $feishuAppId = Read-Host
-    }
+# 确保在用户交互时不会因为之前的错误而退出
+$ErrorActionPreference = "Continue"
 
-    Write-Host -NoNewline "飞书 App Secret: "
-    if ([Console]::IsInputRedirected) {
-        $feishuAppSecret = $Host.UI.ReadLine()
-    } else {
-        $feishuAppSecret = Read-Host
+if ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyUp") } # 清除缓冲区
+
+if ([Environment]::UserInteractive) {
+    try {
+        Write-Host -NoNewline "飞书 App ID (直接回车跳过): " -ForegroundColor Green
+        if ([Console]::IsInputRedirected) {
+            $feishuAppId = $Host.UI.ReadLine()
+        } else {
+            $feishuAppId = Read-Host
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($feishuAppId)) {
+            Write-Host -NoNewline "飞书 App Secret: " -ForegroundColor Green
+            if ([Console]::IsInputRedirected) {
+                $feishuAppSecret = $Host.UI.ReadLine()
+            } else {
+                $feishuAppSecret = Read-Host
+            }
+        }
+    } catch {
+        Write-Warning "无法读取输入，跳过..."
     }
 }
 
 if ($feishuAppId -and $feishuAppSecret) {
     Write-Step "配置飞书..."
+    
+    # 1. 下载并安装指定版本的飞书插件 (锁定版本)
+    $FeishuUrl = "$BaseUrl/feishu-$verFeishu.tgz"
+    $FeishuTmp = "$env:TEMP\feishu.tgz"
+    
+    Write-Host "  正在下载飞书插件 ($verFeishu)..." -ForegroundColor Gray
+    try {
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile($FeishuUrl, $FeishuTmp)
+        
+        Write-Host "  正在安装飞书插件..." -ForegroundColor Gray
+        cmd /c "npm install -g `"$FeishuTmp`" --registry=https://registry.npmmirror.com --no-audit --loglevel=error"
+        Remove-Item -Path $FeishuTmp -Force -ErrorAction SilentlyContinue
+    } catch {
+        Write-Warning "飞书插件下载/安装失败，尝试通过 CLI 自动安装..."
+    }
+
+    # 2. 注册并配置
     openclaw channels add --channel feishu 2>$null
     openclaw config set channels.feishu.appId $feishuAppId 2>$null
     openclaw config set channels.feishu.appSecret $feishuAppSecret 2>$null
