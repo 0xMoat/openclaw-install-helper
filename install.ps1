@@ -655,7 +655,7 @@ if (Test-Command "openclaw") {
 
 if ($needInstall) {
     # 选择并应用 GitHub 镜像（解决无法访问 GitHub 的问题）
-    $gitMirror = Select-BestGitHubMirror
+    $gitMirror = Select-BestMirror
     if ($gitMirror) {
         Apply-GitMirror $gitMirror
     } else {
