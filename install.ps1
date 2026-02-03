@@ -1042,26 +1042,17 @@ if ([Environment]::UserInteractive) {
 if ($feishuAppId -and $feishuAppSecret) {
     Write-Step "配置飞书..."
     
-    # 1. 下载并安装指定版本的飞书插件 (锁定版本)
-    $FeishuUrl = "$BaseUrl/feishu-$verFeishu.tgz"
-    $FeishuTmp = "$env:TEMP\feishu.tgz"
-    
-    Write-Host "  正在下载飞书插件 ($verFeishu)..." -ForegroundColor Gray
+    # 使用 openclaw plugins install 命令安装飞书插件
+    Write-Host "  正在安装飞书插件..." -ForegroundColor Gray
     try {
-        $webClient = New-Object System.Net.WebClient
-        $webClient.DownloadFile($FeishuUrl, $FeishuTmp)
-        
-        Write-Host "  正在安装飞书插件..." -ForegroundColor Gray
-        cmd /c "npm install -g `"$FeishuTmp`" --registry=https://registry.npmmirror.com --no-audit --loglevel=error"
-        Remove-Item -Path $FeishuTmp -Force -ErrorAction SilentlyContinue
+        openclaw plugins install "@m1heng-clawd/feishu" 2>$null
     } catch {
-        Write-Warning "飞书插件下载/安装失败，尝试通过 CLI 自动安装..."
+        Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu"
     }
 
-    # 2. 注册并配置
-    openclaw channels add --channel feishu 2>$null
-    openclaw config set channels.feishu.appId $feishuAppId 2>$null
-    openclaw config set channels.feishu.appSecret $feishuAppSecret 2>$null
+    # 配置飞书 appId 和 appSecret
+    try { openclaw config set channels.feishu.appId $feishuAppId 2>$null } catch {}
+    try { openclaw config set channels.feishu.appSecret $feishuAppSecret 2>$null } catch {}
     Write-Success "飞书配置完成"
 } else {
     Write-Warning "跳过飞书配置（未输入完整信息）"

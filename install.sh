@@ -347,23 +347,12 @@ fi
 # ============================================================
 print_step "安装飞书插件..."
 
-# Gitee 托管的飞书插件 URL
-FEISHU_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/${VER_TAG}/feishu-${VER_FEISHU}.tgz"
-FEISHU_TMP="/tmp/feishu-plugin.tgz"
-
-# 优先从 R2 下载安装，如果失败则从 npm 安装
-if curl -sL -o "$FEISHU_TMP" "$FEISHU_R2_URL" && [[ -f "$FEISHU_TMP" ]]; then
-    # 使用 npm install -g 安装，然后 openclaw 会自动识别（或后续手动 add）
-    npm install -g "$FEISHU_TMP" --no-audit --loglevel=error
-    rm -f "$FEISHU_TMP"
-    # 显式注册
-    openclaw channels add --channel feishu 2>/dev/null || true
+# 使用 openclaw plugins install 命令安装飞书插件
+if openclaw plugins install @m1heng-clawd/feishu < /dev/null 2>/dev/null; then
+    print_success "飞书插件安装完成"
 else
-    print_warning "从 Gitee 下载失败，尝试 npm registry..."
-    openclaw channels add --channel feishu 2>/dev/null || true
+    print_warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu"
 fi
-
-print_success "飞书插件安装完成"
 
 # ============================================================
 # 步骤 6: 安装文件处理技能（可选，失败不影响主流程）
@@ -463,7 +452,6 @@ fi
 
 if [[ -n "$feishu_app_id" && -n "$feishu_app_secret" ]]; then
     print_step "配置飞书..."
-    openclaw channels add --channel feishu < /dev/null 2>/dev/null || true
     openclaw config set channels.feishu.appId "$feishu_app_id" < /dev/null 2>/dev/null || true
     openclaw config set channels.feishu.appSecret "$feishu_app_secret" < /dev/null 2>/dev/null || true
     print_success "飞书配置完成"
