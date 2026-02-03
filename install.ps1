@@ -1042,12 +1042,12 @@ if ([Environment]::UserInteractive) {
 if ($feishuAppId -and $feishuAppSecret) {
     Write-Step "配置飞书..."
     
-    # 使用 openclaw plugins install 命令安装飞书插件
+    # 使用 openclaw plugins install 命令安装飞书插件（锁定版本）
     Write-Host "  正在安装飞书插件..." -ForegroundColor Gray
     try {
-        openclaw plugins install "@m1heng-clawd/feishu" 2>$null
+        openclaw plugins install "@m1heng-clawd/feishu@0.1.7" 2>$null
     } catch {
-        Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu"
+        Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
     }
 
     # 配置飞书 appId 和 appSecret

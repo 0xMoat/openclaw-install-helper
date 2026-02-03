@@ -347,11 +347,11 @@ fi
 # ============================================================
 print_step "安装飞书插件..."
 
-# 使用 openclaw plugins install 命令安装飞书插件
-if openclaw plugins install @m1heng-clawd/feishu < /dev/null 2>/dev/null; then
+# 使用 openclaw plugins install 命令安装飞书插件（锁定版本）
+if openclaw plugins install @m1heng-clawd/feishu@0.1.7 < /dev/null 2>/dev/null; then
     print_success "飞书插件安装完成"
 else
-    print_warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu"
+    print_warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
 fi
 
 # ============================================================
