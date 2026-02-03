@@ -520,13 +520,16 @@ cat << 'EOF'
   ╠═══════════════════════════════════════════════════════╣
   ║                                                       ║
   ║  已连接您的飞书机器人，请在飞书中开始使用！           ║
-  ║  也可以打开浏览器访问 http://127.0.0.1:18789 开始使用!║
   ║                                                       ║
   ║  常用命令:                                            ║
-  ║    openclaw dashboard   - 打开控制台 (浏览器)     ║
+  ║    openclaw dashboard       - 打开控制台 (浏览器)     ║
   ║    openclaw gateway restart - 重启服务                ║
   ║    openclaw gateway stop    - 停止服务                ║
   ║                                                       ║
   ╚═══════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
+
+# 自动打开 Dashboard（带 token 认证）
+print_step "正在打开 Dashboard..."
+openclaw dashboard 2>/dev/null || true
