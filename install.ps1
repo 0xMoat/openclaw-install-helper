@@ -679,6 +679,11 @@ if ($needInstall) {
 
     # 5. 安装 OpenClaw (跳过脚本)
     Write-Host "  正在安装 OpenClaw核心 (跳过编译)..." -ForegroundColor Gray
+    
+    # 配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
+    git config --global url."https://github.com/".insteadOf "git@github.com:"
+    git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+    
     $ErrorActionPreference = "Continue"
     cmd /c "npm install -g `"$OpenclawTmp`" --registry=https://registry.npmmirror.com --ignore-scripts --progress --loglevel=notice"
     $ErrorActionPreference = "Stop"

@@ -307,6 +307,10 @@ print_step "检查 OpenClaw..."
 # Gitee 托管的包 URL（中国境内访问更快）
 OPENCLAW_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/${VER_TAG}/openclaw-${VER_OPENCLAW}.tgz"
 
+# 配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
+git config --global url."https://github.com/".insteadOf "git@github.com:"
+git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
 if command_exists openclaw; then
     # 检查版本
     current_ver=$(openclaw --version 2>/dev/null || echo "")
