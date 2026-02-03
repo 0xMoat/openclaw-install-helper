@@ -389,20 +389,22 @@ print_success "飞书插件安装完成"
         apply_git_mirror "$MIRROR_URL"
     fi
 
-    # 直接使用 npx 安装指定版本
-    npx -y skills@${VER_SKILLS} add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
+    # 直接使用 npx 安装指定版本（失败时跳过，不中断安装）
+    if npx -y skills@${VER_SKILLS} add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null; then
+        print_success "文件处理技能安装完成"
+        echo ""
+        echo -e "${CYAN}已安装技能:${NC}"
+        echo "  - xlsx (Excel 文件处理)"
+        echo "  - pdf (PDF 文件处理)"
+        echo "  - pptx (PowerPoint 文件处理)"
+        echo "  - docx (Word 文件处理)"
+    else
+        print_warning "文件处理技能安装失败（可能是网络问题），跳过此步骤"
+        print_warning "你可以稍后手动运行: npx skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw"
+    fi
 
     # 清除镜像配置
     remove_git_mirror
-
-    print_success "文件处理技能安装完成"
-
-    echo ""
-    echo -e "${CYAN}已安装技能:${NC}"
-    echo "  - xlsx (Excel 文件处理)"
-    echo "  - pdf (PDF 文件处理)"
-    echo "  - pptx (PowerPoint 文件处理)"
-    echo "  - docx (Word 文件处理)"
 fi
 
 # ============================================================
