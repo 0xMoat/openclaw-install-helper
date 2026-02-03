@@ -365,19 +365,17 @@ fi
 
 print_success "飞书插件安装完成"
 
-# ... (End of Step 5) ...
-
-# (Skipping to Skills Section)
-
-# ...
-
+# ============================================================
+# 步骤 6: 安装文件处理技能（可选，失败不影响主流程）
+# ============================================================
+if [[ "$SKIP_SKILLS" != "1" ]]; then
     # 安装文件处理技能
     print_step "安装 PDF, PPT, Excel, Docx 技能..."
 
     # 修复 .moltbot 目录权限问题 (如果是文件则删除)
     MOLTBOT_DIR="$HOME/.moltbot"
-    if [[ -f "$MOLTBOT_DIR" ]]; then
-        rm -f "$MOLTBOT_DIR" || true
+    if [[ -e "$MOLTBOT_DIR" && ! -d "$MOLTBOT_DIR" ]]; then
+        rm -f "$MOLTBOT_DIR" 2>/dev/null || true
     fi
     mkdir -p "$MOLTBOT_DIR" 2>/dev/null || true
 
