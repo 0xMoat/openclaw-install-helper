@@ -888,7 +888,6 @@ if ($env:SKIP_SKILLS -ne "1") {
     Apply-GitMirror $skillsMirror
     
     # 修复 skills CLI 的 bug: 它尝试在 HOME/.moltbot 创建目录但不检查父目录是否存在
-    # 修复 skills CLI 的 bug: 它尝试在 HOME/.moltbot 创建目录但不检查父目录是否存在
     $moltbotDir = "$env:USERPROFILE\.moltbot"
     if (Test-Path $moltbotDir) {
         $item = Get-Item $moltbotDir
@@ -902,20 +901,36 @@ if ($env:SKIP_SKILLS -ne "1") {
         New-Item -ItemType Directory -Force -Path $moltbotDir | Out-Null
     }
 
-    npx -y skills@$verSkills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g 2>$null
+    # 安装 skills（失败时跳过，不中断安装）
+    $skillsInstalled = $false
+    try {
+        $ErrorActionPreference = "Continue"
+        npx -y skills@$verSkills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            $skillsInstalled = $true
+        }
+        $ErrorActionPreference = "Stop"
+    } catch {
+        # 忽略错误
+    }
 
     # 恢复 Git 配置
     Remove-GitMirror
-    Write-Success "Git 配置已恢复"
 
-    Write-Success "文件处理技能安装完成"
-
-    Write-Host ""
-    Write-Host "已安装技能:" -ForegroundColor Cyan
-    Write-Host "  - xlsx (Excel 文件处理)"
-    Write-Host "  - pdf (PDF 文件处理)"
-    Write-Host "  - pptx (PowerPoint 文件处理)"
-    Write-Host "  - docx (Word 文件处理)"
+    if ($skillsInstalled) {
+        Write-Success "文件处理技能安装完成"
+        Write-Host ""
+        Write-Host "已安装技能:" -ForegroundColor Cyan
+        Write-Host "  - xlsx (Excel 文件处理)"
+        Write-Host "  - pdf (PDF 文件处理)"
+        Write-Host "  - pptx (PowerPoint 文件处理)"
+        Write-Host "  - docx (Word 文件处理)"
+    } else {
+        Write-Warning "文件处理技能安装失败（可能是网络问题），跳过此步骤"
+        Write-Host ""
+        Write-Host "Skills是为了让AI能更高效地操作文档，并不影响其他体验，请放心继续使用。" -ForegroundColor Gray
+        Write-Host "你可以稍后手动运行: npx skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw" -ForegroundColor Gray
+    }
 }
 
 # ============================================================

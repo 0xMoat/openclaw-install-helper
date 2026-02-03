@@ -377,11 +377,9 @@ print_success "飞书插件安装完成"
     # 修复 .moltbot 目录权限问题 (如果是文件则删除)
     MOLTBOT_DIR="$HOME/.moltbot"
     if [[ -f "$MOLTBOT_DIR" ]]; then
-        rm -f "$MOLTBOT_DIR"
-        mkdir -p "$MOLTBOT_DIR"
-    elif [[ ! -d "$MOLTBOT_DIR" ]]; then
-        mkdir -p "$MOLTBOT_DIR"
+        rm -f "$MOLTBOT_DIR" || true
     fi
+    mkdir -p "$MOLTBOT_DIR" 2>/dev/null || true
 
     # 应用 GitHub 镜像加速 skills 克隆
     MIRROR_URL=$(select_best_mirror)
@@ -400,7 +398,9 @@ print_success "飞书插件安装完成"
         echo "  - docx (Word 文件处理)"
     else
         print_warning "文件处理技能安装失败（可能是网络问题），跳过此步骤"
-        print_warning "你可以稍后手动运行: npx skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw"
+        echo ""
+        echo "Skills是为了让AI能更高效地操作文档，并不影响其他体验，请放心继续使用。"
+        echo -e "你可以稍后手动运行: ${CYAN}npx skills add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw${NC}"
     fi
 
     # 清除镜像配置
