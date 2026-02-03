@@ -383,8 +383,17 @@ print_success "飞书插件安装完成"
         mkdir -p "$MOLTBOT_DIR"
     fi
 
+    # 应用 GitHub 镜像加速 skills 克隆
+    MIRROR_URL=$(select_best_mirror)
+    if [[ -n "$MIRROR_URL" ]]; then
+        apply_git_mirror "$MIRROR_URL"
+    fi
+
     # 直接使用 npx 安装指定版本
     npx -y skills@${VER_SKILLS} add anthropics/skills --skill xlsx --skill pdf --skill pptx --skill docx --agent openclaw -y -g < /dev/null
+
+    # 清除镜像配置
+    remove_git_mirror
 
     print_success "文件处理技能安装完成"
 
