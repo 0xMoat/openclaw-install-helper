@@ -47,7 +47,7 @@
 
 7. 点击「版本管理与发布」→「创建版本」
 8. 填写版本号（如 1.0.0）和说明，滚动到页面底部保存发布
-9. 回到「凭证与基础信息」，复制 **App ID** 和 **App Secret**
+9. 回到「凭证与基础信息」，复制 **App ID** 和 **App Secret**，后续安装过程中会用到
 
 ---
 
@@ -128,3 +128,12 @@ A: 运行以下命令：
 ```bash
 openclaw models auth login --provider qwen-portal --set-default
 ```
+
+---
+
+## 🙏 致谢
+
+感谢以下开源项目的作者：
+
+- [openclaw/openclaw](https://github.com/openclaw/openclaw) - OpenClaw 核心项目
+- [m1heng/clawdbot-feishu](https://github.com/m1heng/clawdbot-feishu) - 飞书机器人插件
