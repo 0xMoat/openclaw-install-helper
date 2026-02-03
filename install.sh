@@ -104,7 +104,27 @@ restore_npm_registry() {
     echo -e "${CYAN}[信息]${NC} 已恢复 npm 源设置"
 }
 
-# ... (Path refresh logic omitted, assumes it's unchanged) ...
+# ============================================================
+# 核心工具函数
+# ============================================================
+
+# 检查命令是否存在
+command_exists() {
+    command -v "$1" &> /dev/null
+}
+
+# 刷新 PATH（brew 安装后立即生效）
+refresh_path() {
+    # 激活 Homebrew
+    if [[ -f "/opt/homebrew/bin/brew" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -f "/usr/local/bin/brew" ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+
+    # 确保常用路径在 PATH 中
+    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+}
 
 # 简单的串行测速（GitHub 镜像）
 select_best_mirror() {
