@@ -808,6 +808,28 @@
             box-shadow: 6px 6px 0 var(--black);
         }
 
+        .credits {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .credits a {
+            color: var(--accent);
+            text-decoration: none;
+            background: none;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            font-family: inherit;
+        }
+
+        .credits a:hover {
+            text-decoration: underline;
+            transform: none;
+            box-shadow: none;
+        }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -1604,6 +1626,10 @@
         </div>
 
         <footer>
+            <div class="credits">
+                基于 <a href="https://github.com/openclaw/openclaw" target="_blank">OpenClaw</a> 和
+                <a href="https://github.com/m1heng/clawdbot-feishu" target="_blank">ClawdBot-Feishu</a> 构建，感谢原作者！
+            </div>
             <a href="https://github.com/0xMoat/openclaw-install-helper" target="_blank">
                 GitHub →
             </a>
