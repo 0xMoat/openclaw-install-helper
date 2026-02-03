@@ -654,15 +654,17 @@ if (Test-Command "openclaw") {
 }
 
 if ($needInstall) {
-    # 临时配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
-    # 保存原配置以便恢复
-    $gitSshConfig = git config --global --get-all url."https://github.com/".insteadOf 2>$null
-    $hadConfig = -not [string]::IsNullOrEmpty($gitSshConfig)
-    
-    # 先清除旧配置（避免多值冲突），再添加新配置
-    git config --global --unset-all url."https://github.com/".insteadOf 2>$null
-    git config --global url."https://github.com/".insteadOf "git@github.com:"
-    git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+    # 选择并应用 GitHub 镜像（解决无法访问 GitHub 的问题）
+    $gitMirror = Select-BestGitHubMirror
+    if ($gitMirror) {
+        Apply-GitMirror $gitMirror
+    } else {
+        # 如果没有可用镜像，至少配置 SSH 转 HTTPS
+        Write-Host "  配置 Git (SSH -> HTTPS)..." -ForegroundColor Gray
+        git config --global --unset-all url."https://github.com/".insteadOf 2>$null
+        git config --global url."https://github.com/".insteadOf "git@github.com:"
+        git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
+    }
     
     Write-Host "  正在安装 OpenClaw (从 Gitee 下载)..." -ForegroundColor Gray
     $ErrorActionPreference = "Continue"
@@ -679,10 +681,8 @@ if ($needInstall) {
     
     $ErrorActionPreference = "Stop"
     
-    # 恢复 git 配置
-    if (-not $hadConfig) {
-        git config --global --unset-all url."https://github.com/".insteadOf 2>$null
-    }
+    # 恢复 git 配置（清除镜像配置）
+    Remove-GitMirror
 
     Refresh-Path
     
