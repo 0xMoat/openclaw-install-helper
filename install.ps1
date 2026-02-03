@@ -961,14 +961,14 @@ Write-Step "初始化 OpenClaw..."
 Get-Process node, openclaw -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue
 
 try {
-    openclaw onboard --non-interactive --accept-risk --skip-daemon 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
+    cmd /c "openclaw onboard --non-interactive --accept-risk --skip-daemon" 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 } catch {
     Write-Warning "初始化遇到轻微错误，尝试继续..."
 }
 
 Write-Step "安装网关服务..."
 try {
-    openclaw gateway install 2>&1
+    cmd /c "openclaw gateway install" 2>&1
     Write-Success "网关服务安装完成"
 } catch {
     Write-Err "网关服务安装失败"
@@ -1057,7 +1057,7 @@ if ([Environment]::UserInteractive) {
 # 安装飞书插件（无论是否输入凭证都需要安装）
 Write-Step "安装飞书插件..."
 try {
-    openclaw plugins install "@m1heng-clawd/feishu@0.1.7" 2>$null
+    cmd /c "openclaw plugins install @m1heng-clawd/feishu@0.1.7" 2>$null
     Write-Success "飞书插件安装完成"
 } catch {
     Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
@@ -1066,8 +1066,8 @@ try {
 # 配置飞书凭证
 if ($feishuAppId -and $feishuAppSecret) {
     Write-Host "  正在配置飞书凭证..." -ForegroundColor Gray
-    try { openclaw config set channels.feishu.appId $feishuAppId 2>$null } catch {}
-    try { openclaw config set channels.feishu.appSecret $feishuAppSecret 2>$null } catch {}
+    try { cmd /c "openclaw config set channels.feishu.appId $feishuAppId" 2>$null } catch {}
+    try { cmd /c "openclaw config set channels.feishu.appSecret $feishuAppSecret" 2>$null } catch {}
     Write-Success "飞书配置完成"
 } else {
     Write-Warning "跳过飞书凭证配置（未输入完整信息）"
@@ -1088,9 +1088,9 @@ Write-Host ""
 Write-Step "启动 Qwen 认证..."
 
 # 首先启用 qwen-portal-auth plugin
-openclaw plugins enable qwen-portal-auth 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
+cmd /c "openclaw plugins enable qwen-portal-auth" 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 
-# 然后进行认证
+# 然后进行认证（这个需要用户交互，保持原样）
 openclaw models auth login --provider qwen-portal --set-default
 
 # 复制 auth 配置到主 agent 目录
@@ -1102,7 +1102,7 @@ if (Test-Path $agentAuthPath) {
 
 # 重启 gateway 使配置生效
 Write-Step "重启网关服务..."
-openclaw gateway restart 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
+cmd /c "openclaw gateway restart" 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 
 Write-Success "Qwen 认证完成"
 
