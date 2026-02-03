@@ -463,9 +463,9 @@ fi
 
 if [[ -n "$feishu_app_id" && -n "$feishu_app_secret" ]]; then
     print_step "配置飞书..."
-    openclaw channels add --channel feishu < /dev/null
-    openclaw config set channels.feishu.appId "$feishu_app_id" < /dev/null
-    openclaw config set channels.feishu.appSecret "$feishu_app_secret" < /dev/null
+    openclaw channels add --channel feishu < /dev/null 2>/dev/null || true
+    openclaw config set channels.feishu.appId "$feishu_app_id" < /dev/null 2>/dev/null || true
+    openclaw config set channels.feishu.appSecret "$feishu_app_secret" < /dev/null 2>/dev/null || true
     print_success "飞书配置完成"
 else
     print_warning "跳过飞书配置（未输入完整信息）"
