@@ -1054,23 +1054,23 @@ if ([Environment]::UserInteractive) {
     }
 }
 
-if ($feishuAppId -and $feishuAppSecret) {
-    Write-Step "配置飞书..."
-    
-    # 使用 openclaw plugins install 命令安装飞书插件（锁定版本）
-    Write-Host "  正在安装飞书插件..." -ForegroundColor Gray
-    try {
-        openclaw plugins install "@m1heng-clawd/feishu@0.1.7" 2>$null
-    } catch {
-        Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
-    }
+# 安装飞书插件（无论是否输入凭证都需要安装）
+Write-Step "安装飞书插件..."
+try {
+    openclaw plugins install "@m1heng-clawd/feishu@0.1.7" 2>$null
+    Write-Success "飞书插件安装完成"
+} catch {
+    Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
+}
 
-    # 配置飞书 appId 和 appSecret
+# 配置飞书凭证
+if ($feishuAppId -and $feishuAppSecret) {
+    Write-Host "  正在配置飞书凭证..." -ForegroundColor Gray
     try { openclaw config set channels.feishu.appId $feishuAppId 2>$null } catch {}
     try { openclaw config set channels.feishu.appSecret $feishuAppSecret 2>$null } catch {}
     Write-Success "飞书配置完成"
 } else {
-    Write-Warning "跳过飞书配置（未输入完整信息）"
+    Write-Warning "跳过飞书凭证配置（未输入完整信息）"
 }
 
 # ============================================================
