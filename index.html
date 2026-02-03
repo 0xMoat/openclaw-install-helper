@@ -65,6 +65,42 @@
             animation: float1 6s ease-in-out infinite;
         }
 
+        .json-wrapper {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .json-code {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: #333;
+            white-space: pre-wrap;
+            display: block;
+            margin: 0;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .json-copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .json-copy-btn:hover {
+            background: #eee;
+        }
+
         .shape-2 {
             width: 80px;
             height: 80px;
@@ -1063,6 +1099,26 @@
                         <div class="guide-item-num">4.6</div>
                         <div class="guide-item-content">
                             <h4>复制填入批量权限json后确认</h4>
+                            <div class="json-wrapper">
+                                <code class="json-code" id="feishu-json-mac">{
+  "scopes": {
+    "tenant": [
+      "contact:user.base:readonly",
+      "im:message",
+      "im:message.p2p_msg:readonly",
+      "im:message.group_at_msg:readonly",
+      "im:message:send_as_bot",
+      "im:resource",
+      "im:message.group_msg",
+      "im:message:readonly",
+      "im:message:update",
+      "im:message:recall",
+      "im:message.reactions:read"
+    ]
+  }
+}</code>
+                                <button class="json-copy-btn" onclick="copyCommand('feishu-json-mac', this)">复制</button>
+                            </div>
                             <div class="guide-image-slot">
                                 <img src="static/6-复制填入批量权限json后确认.png" alt="步骤6">
                             </div>
@@ -1196,6 +1252,26 @@
                         <div class="guide-item-num">4.6</div>
                         <div class="guide-item-content">
                             <h4>复制填入批量权限json后确认</h4>
+                            <div class="json-wrapper">
+                                <code class="json-code" id="feishu-json-win">{
+  "scopes": {
+    "tenant": [
+      "contact:user.base:readonly",
+      "im:message",
+      "im:message.p2p_msg:readonly",
+      "im:message.group_at_msg:readonly",
+      "im:message:send_as_bot",
+      "im:resource",
+      "im:message.group_msg",
+      "im:message:readonly",
+      "im:message:update",
+      "im:message:recall",
+      "im:message.reactions:read"
+    ]
+  }
+}</code>
+                                <button class="json-copy-btn" onclick="copyCommand('feishu-json-win', this)">复制</button>
+                            </div>
                             <div class="guide-image-slot">
                                 <img src="static/6-复制填入批量权限json后确认.png" alt="步骤6">
                             </div>
