@@ -656,9 +656,11 @@ if (Test-Command "openclaw") {
 if ($needInstall) {
     # 临时配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
     # 保存原配置以便恢复
-    $gitSshConfig = git config --global --get url."https://github.com/".insteadOf 2>$null
-    $hadConfig = $LASTEXITCODE -eq 0
+    $gitSshConfig = git config --global --get-all url."https://github.com/".insteadOf 2>$null
+    $hadConfig = -not [string]::IsNullOrEmpty($gitSshConfig)
     
+    # 先清除旧配置（避免多值冲突），再添加新配置
+    git config --global --unset-all url."https://github.com/".insteadOf 2>$null
     git config --global url."https://github.com/".insteadOf "git@github.com:"
     git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
     

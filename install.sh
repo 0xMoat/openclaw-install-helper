@@ -309,8 +309,15 @@ OPENCLAW_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/
 
 # 临时配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
 # 保存原配置以便恢复
-GIT_HAD_SSH_CONFIG=$(git config --global --get url."https://github.com/".insteadOf 2>/dev/null && echo "yes" || echo "no")
+GIT_HAD_SSH_CONFIG=$(git config --global --get-all url."https://github.com/".insteadOf 2>/dev/null)
+if [[ -n "$GIT_HAD_SSH_CONFIG" ]]; then
+    GIT_HAD_CONFIG="yes"
+else
+    GIT_HAD_CONFIG="no"
+fi
 
+# 先清除旧配置（避免多值冲突），再添加新配置
+git config --global --unset-all url."https://github.com/".insteadOf 2>/dev/null || true
 git config --global url."https://github.com/".insteadOf "git@github.com:"
 git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
 
@@ -350,7 +357,7 @@ else
 fi
 
 # 恢复 git 配置
-if [[ "$GIT_HAD_SSH_CONFIG" == "no" ]]; then
+if [[ "$GIT_HAD_CONFIG" == "no" ]]; then
     git config --global --unset-all url."https://github.com/".insteadOf 2>/dev/null || true
 fi
 
