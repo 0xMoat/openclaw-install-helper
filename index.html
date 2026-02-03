@@ -1100,89 +1100,70 @@
                 </div>
             </div>
 
-            <div class="command-wrapper">
-                <div class="command-label">在终端中运行</div>
-                <code class="command-text"
-                    id="mac-cmd">curl -fsSL https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.sh | bash</code>
-                <button class="copy-btn" onclick="copyCommand('mac-cmd', this)" aria-label="复制">📋</button>
-            </div>
-
             <div class="steps">
-                <div class="step">
-                    <span class="step-num">1</span>
-                    <span class="step-text">按下 <strong>⌘ + 空格</strong>，输入「终端」并回车打开</span>
-                </div>
-                <div class="step">
-                    <span class="step-num">2</span>
-                    <span class="step-text">点击右侧 📋 复制命令，在终端中粘贴</span>
-                </div>
-                <div class="step">
-                    <span class="step-num">3</span>
-                    <span class="step-text">按下 <strong>回车</strong>，等待安装完成</span>
-                </div>
+                <!-- Step 1: Feishu Config -->
                 <div class="step step-feishu">
-                    <span class="step-num">4</span>
+                    <span class="step-num">1</span>
                     <span class="step-text">
-                        前往 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a> 配置 Bot
+                        前往 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a> 获取 App ID 和 Secret
                         <button class="expand-guide-btn" onclick="toggleFeishuGuide('mac')">查看配置指南 ▼</button>
                     </span>
                 </div>
-            </div>
 
-            <!-- Feishu Guide for Mac -->
-            <div class="feishu-guide hidden" id="feishu-guide-mac">
-                <div class="guide-grid">
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.1</div>
-                        <div class="guide-item-content">
-                            <h4>进入开发者后台</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/1-进入开发者后台.png" alt="步骤1">
+                <!-- Feishu Guide for Mac (Moved to Step 1) -->
+                <div class="feishu-guide hidden" id="feishu-guide-mac">
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.1</div>
+                            <div class="guide-item-content">
+                                <h4>进入开发者后台</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/1-进入开发者后台.png" alt="步骤1">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.2</div>
-                        <div class="guide-item-content">
-                            <h4>点击创建你的应用</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/2-点击创建你的应用.png" alt="步骤2">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.2</div>
+                            <div class="guide-item-content">
+                                <h4>点击创建你的应用</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/2-点击创建你的应用.png" alt="步骤2">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.3</div>
-                        <div class="guide-item-content">
-                            <h4>为应用取名后创建</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/3-为应用取名后创建.png" alt="步骤3">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.3</div>
+                            <div class="guide-item-content">
+                                <h4>为应用取名后创建</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/3-为应用取名后创建.png" alt="步骤3">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.4</div>
-                        <div class="guide-item-content">
-                            <h4>为应用添加机器人能力</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/4-为应用添加机器人能力.png" alt="步骤4">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.4</div>
+                            <div class="guide-item-content">
+                                <h4>为应用添加机器人能力</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/4-为应用添加机器人能力.png" alt="步骤4">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.5</div>
-                        <div class="guide-item-content">
-                            <h4>为应用批量开通权限</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/5-为应用批量开通权限.png" alt="步骤5">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.5</div>
+                            <div class="guide-item-content">
+                                <h4>为应用批量开通权限</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/5-为应用批量开通权限.png" alt="步骤5">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.6</div>
-                        <div class="guide-item-content">
-                            <h4>填入复制的批量权限json后确认</h4>
-                            <div class="json-wrapper">
-                                <code class="json-code" id="feishu-json-mac">{
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.6</div>
+                            <div class="guide-item-content">
+                                <h4>填入复制的批量权限json后确认</h4>
+                                <div class="json-wrapper">
+                                    <code class="json-code" id="feishu-json-mac">{
   "scopes": {
     "tenant": [
       "contact:user.base:readonly",
@@ -1199,40 +1180,124 @@
     ]
   }
 }</code>
-                                <button class="json-copy-btn" onclick="copyCommand('feishu-json-mac', this)">复制</button>
+                                    <button class="json-copy-btn"
+                                        onclick="copyCommand('feishu-json-mac', this)">复制</button>
+                                </div>
+                                <div class="guide-image-slot">
+                                    <img src="static/6-复制填入批量权限json后确认.png" alt="步骤6">
+                                </div>
                             </div>
-                            <div class="guide-image-slot">
-                                <img src="static/6-复制填入批量权限json后确认.png" alt="步骤6">
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.7</div>
+                            <div class="guide-item-content">
+                                <h4>创建应用版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/7-创建应用版本.png" alt="步骤7">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.8</div>
+                            <div class="guide-item-content">
+                                <h4>随意填写版本号和说明后滚动到页面底部保存发布版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/8-随意填写版本号和说明后滚动到页面底部保存发布版本.png" alt="步骤8">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.9</div>
+                            <div class="guide-item-content">
+                                <h4>回到凭证与基础信息复制AppId和AppSecret</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/9-回到凭证与基础信息复制AppId和AppSecret.png" alt="步骤9">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.10</div>
+                            <div class="guide-item-content">
+                                <h4>脚本安装过程中自动打开浏览器，直接登录或注册千问账号</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/10-安装时自动打开浏览器提示直接登录或注册千问账号.png" alt="步骤10">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.11</div>
+                            <div class="guide-item-content">
+                                <h4>直接登录或注册后确认授权</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/11-直接登录或注册后确认授权.png" alt="步骤11">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.12</div>
+                            <div class="guide-item-content">
+                                <h4>【脚本安装完成后】回到飞书开放平台，打开事件配置长连接</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/12-打开事件配置长连接.png" alt="步骤12">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.13</div>
+                            <div class="guide-item-content">
+                                <h4>添加事件接收消息</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/13-添加事件接收消息.png" alt="步骤13">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.14</div>
+                            <div class="guide-item-content">
+                                <h4>再次创建版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/14-再次创建版本.png" alt="步骤14">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.15</div>
+                            <div class="guide-item-content">
+                                <h4>随意填写版本号(如2.0.0)和说明后滚动到页面底部保存发布版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/15-随意填写个版本号2.0.0和说明后滚动到页面底部保存发布版本.png" alt="步骤15">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.16</div>
+                            <div class="guide-item-content">
+                                <h4>来到飞书消息打开开发者小助手，打开应用开始聊天使用</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/16-来到飞书消息打开开发者小助手打开应用开始聊天使用.png" alt="步骤16">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.7</div>
-                        <div class="guide-item-content">
-                            <h4>创建应用版本</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/7-创建应用版本.png" alt="步骤7">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.8</div>
-                        <div class="guide-item-content">
-                            <h4>随意填写版本号和说明后滚动到页面底部保存发布版本</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/8-随意填写版本号和说明后滚动到页面底部保存发布版本.png" alt="步骤8">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.9</div>
-                        <div class="guide-item-content">
-                            <h4>回到凭证与基础信息复制AppId和AppSecret</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/9-回到凭证与基础信息复制AppId和AppSecret.png" alt="步骤9">
-                            </div>
-                        </div>
-                    </div>
+                </div>
+
+                <!-- Step 2: Copy Command -->
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <span class="step-text">按下 <strong>⌘ + 空格</strong>，输入「终端」并打开，然后复制运行下方命令：</span>
+                </div>
+
+                <div class="command-wrapper">
+                    <!-- <div class="command-label">在终端中运行</div> -->
+                    <code class="command-text"
+                        id="mac-cmd">curl -fsSL https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.sh | bash</code>
+                    <button class="copy-btn" onclick="copyCommand('mac-cmd', this)" aria-label="复制">📋</button>
+                </div>
+
+                <!-- Step 3: Input Creds -->
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <span class="step-text">等待脚本提示，输入刚才获取的 <strong>App ID</strong> 和 <strong>App Secret</strong></span>
                 </div>
             </div>
         </div>
@@ -1253,89 +1318,70 @@
                 </div>
             </div>
 
-            <div class="command-wrapper">
-                <div class="command-label">在 PowerShell (管理员) 中运行</div>
-                <code class="command-text"
-                    id="win-cmd">Set-ExecutionPolicy Bypass -Scope Process -Force; $ProgressPreference='SilentlyContinue'; iex ([Text.Encoding]::UTF8.GetString((iwr 'https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1' -UseBasicParsing).Content))</code>
-                <button class="copy-btn" onclick="copyCommand('win-cmd', this)" aria-label="复制">📋</button>
-            </div>
-
             <div class="steps">
-                <div class="step">
-                    <span class="step-num">1</span>
-                    <span class="step-text">右键点击 <strong>开始菜单</strong>，选择「PowerShell (管理员)」</span>
-                </div>
-                <div class="step">
-                    <span class="step-num">2</span>
-                    <span class="step-text">点击右侧 📋 复制命令，在窗口中粘贴</span>
-                </div>
-                <div class="step">
-                    <span class="step-num">3</span>
-                    <span class="step-text">按下 <strong>回车</strong>，等待安装完成</span>
-                </div>
+                <!-- Step 1: Feishu Config -->
                 <div class="step step-feishu">
-                    <span class="step-num">4</span>
+                    <span class="step-num">1</span>
                     <span class="step-text">
-                        前往 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a> 配置 Bot
+                        前往 <a href="https://open.feishu.cn" target="_blank">飞书开放平台</a> 获取 App ID 和 Secret
                         <button class="expand-guide-btn" onclick="toggleFeishuGuide('win')">查看配置指南 ▼</button>
                     </span>
                 </div>
-            </div>
 
-            <!-- Feishu Guide for Windows -->
-            <div class="feishu-guide hidden" id="feishu-guide-win">
-                <div class="guide-grid">
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.1</div>
-                        <div class="guide-item-content">
-                            <h4>进入开发者后台</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/1-进入开发者后台.png" alt="步骤1">
+                <!-- Feishu Guide for Windows (Moved to Step 1) -->
+                <div class="feishu-guide hidden" id="feishu-guide-win">
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.1</div>
+                            <div class="guide-item-content">
+                                <h4>进入开发者后台</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/1-进入开发者后台.png" alt="步骤1">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.2</div>
-                        <div class="guide-item-content">
-                            <h4>点击创建你的应用</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/2-点击创建你的应用.png" alt="步骤2">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.2</div>
+                            <div class="guide-item-content">
+                                <h4>点击创建你的应用</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/2-点击创建你的应用.png" alt="步骤2">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.3</div>
-                        <div class="guide-item-content">
-                            <h4>为应用取名后创建</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/3-为应用取名后创建.png" alt="步骤3">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.3</div>
+                            <div class="guide-item-content">
+                                <h4>为应用取名后创建</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/3-为应用取名后创建.png" alt="步骤3">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.4</div>
-                        <div class="guide-item-content">
-                            <h4>为应用添加机器人能力</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/4-为应用添加机器人能力.png" alt="步骤4">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.4</div>
+                            <div class="guide-item-content">
+                                <h4>为应用添加机器人能力</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/4-为应用添加机器人能力.png" alt="步骤4">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.5</div>
-                        <div class="guide-item-content">
-                            <h4>为应用批量开通权限</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/5-为应用批量开通权限.png" alt="步骤5">
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.5</div>
+                            <div class="guide-item-content">
+                                <h4>为应用批量开通权限</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/5-为应用批量开通权限.png" alt="步骤5">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.6</div>
-                        <div class="guide-item-content">
-                            <h4>填入复制的批量权限json后确认</h4>
-                            <div class="json-wrapper">
-                                <code class="json-code" id="feishu-json-win">{
+                        <div class="guide-item">
+                            <div class="guide-item-num">4.6</div>
+                            <div class="guide-item-content">
+                                <h4>填入复制的批量权限json后确认</h4>
+                                <div class="json-wrapper">
+                                    <code class="json-code" id="feishu-json-win">{
   "scopes": {
     "tenant": [
       "contact:user.base:readonly",
@@ -1352,40 +1398,124 @@
     ]
   }
 }</code>
-                                <button class="json-copy-btn" onclick="copyCommand('feishu-json-win', this)">复制</button>
+                                    <button class="json-copy-btn"
+                                        onclick="copyCommand('feishu-json-win', this)">复制</button>
+                                </div>
+                                <div class="guide-image-slot">
+                                    <img src="static/6-复制填入批量权限json后确认.png" alt="步骤6">
+                                </div>
                             </div>
-                            <div class="guide-image-slot">
-                                <img src="static/6-复制填入批量权限json后确认.png" alt="步骤6">
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.7</div>
+                            <div class="guide-item-content">
+                                <h4>创建应用版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/7-创建应用版本.png" alt="步骤7">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.8</div>
+                            <div class="guide-item-content">
+                                <h4>随意填写版本号和说明后滚动到页面底部保存发布版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/8-随意填写版本号和说明后滚动到页面底部保存发布版本.png" alt="步骤8">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.9</div>
+                            <div class="guide-item-content">
+                                <h4>回到凭证与基础信息复制AppId和AppSecret</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/9-回到凭证与基础信息复制AppId和AppSecret.png" alt="步骤9">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.10</div>
+                            <div class="guide-item-content">
+                                <h4>脚本安装过程中自动打开浏览器，直接登录或注册千问账号</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/10-安装时自动打开浏览器提示直接登录或注册千问账号.png" alt="步骤10">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.11</div>
+                            <div class="guide-item-content">
+                                <h4>直接登录或注册后确认授权</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/11-直接登录或注册后确认授权.png" alt="步骤11">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.12</div>
+                            <div class="guide-item-content">
+                                <h4>【脚本安装完成后】回到飞书开放平台，打开事件配置长连接</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/12-打开事件配置长连接.png" alt="步骤12">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.13</div>
+                            <div class="guide-item-content">
+                                <h4>添加事件接收消息</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/13-添加事件接收消息.png" alt="步骤13">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.14</div>
+                            <div class="guide-item-content">
+                                <h4>再次创建版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/14-再次创建版本.png" alt="步骤14">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.15</div>
+                            <div class="guide-item-content">
+                                <h4>随意填写版本号(如2.0.0)和说明后滚动到页面底部保存发布版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/15-随意填写个版本号2.0.0和说明后滚动到页面底部保存发布版本.png" alt="步骤15">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">1.16</div>
+                            <div class="guide-item-content">
+                                <h4>来到飞书消息打开开发者小助手，打开应用开始聊天使用</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/16-来到飞书消息打开开发者小助手打开应用开始聊天使用.png" alt="步骤16">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.7</div>
-                        <div class="guide-item-content">
-                            <h4>创建应用版本</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/7-创建应用版本.png" alt="步骤7">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.8</div>
-                        <div class="guide-item-content">
-                            <h4>随意填写版本号和说明后滚动到页面底部保存发布版本</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/8-随意填写版本号和说明后滚动到页面底部保存发布版本.png" alt="步骤8">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="guide-item">
-                        <div class="guide-item-num">4.9</div>
-                        <div class="guide-item-content">
-                            <h4>回到凭证与基础信息复制AppId和AppSecret</h4>
-                            <div class="guide-image-slot">
-                                <img src="static/9-回到凭证与基础信息复制AppId和AppSecret.png" alt="步骤9">
-                            </div>
-                        </div>
-                    </div>
+                </div>
+
+                <!-- Step 2: Copy Command -->
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <span class="step-text">右键点击 <strong>开始菜单</strong>，选择「PowerShell (管理员)」 ，然后复制运行下方命令：</span>
+                </div>
+
+                <div class="command-wrapper">
+                    <!-- <div class="command-label">在 PowerShell (管理员) 中运行</div> -->
+                    <code class="command-text"
+                        id="win-cmd">Set-ExecutionPolicy Bypass -Scope Process -Force; $ProgressPreference='SilentlyContinue'; iex ([Text.Encoding]::UTF8.GetString((iwr 'https://cdn.jsdelivr.net/gh/0xMoat/openclaw-install-helper@main/install.ps1' -UseBasicParsing).Content))</code>
+                    <button class="copy-btn" onclick="copyCommand('win-cmd', this)" aria-label="复制">📋</button>
+                </div>
+
+                <!-- Step 3: Input Creds -->
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <span class="step-text">等待脚本提示，输入刚才获取的 <strong>App ID</strong> 和 <strong>App Secret</strong></span>
                 </div>
             </div>
         </div>
