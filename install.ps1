@@ -1116,6 +1116,8 @@ Write-Host "  ║    openclaw gateway stop    - 停止服务                ║"
 Write-Host "  ║                                                       ║" -ForegroundColor Green
 Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
+Write-Host "如果觉得这个工具好用，请一键三连金牌小密探，并转发给需要的人，感谢！🙏" -ForegroundColor Yellow
+Write-Host ""
 
 # 自动打开 Dashboard（带 token 认证）
 Write-Step "正在打开 Dashboard..."
