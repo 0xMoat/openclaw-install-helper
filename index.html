@@ -1227,69 +1227,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.10</div>
-                            <div class="guide-item-content">
-                                <h4>脚本安装过程中自动打开浏览器，直接登录或注册千问账号</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/10-安装时自动打开浏览器提示直接登录或注册千问账号.png" alt="步骤10">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.11</div>
-                            <div class="guide-item-content">
-                                <h4>直接登录或注册后确认授权</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/11-直接登录或注册后确认授权.png" alt="步骤11">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.12</div>
-                            <div class="guide-item-content">
-                                <h4>【脚本安装完成后】回到飞书开放平台，打开事件配置长连接</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/12-打开事件配置长连接.png" alt="步骤12">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.13</div>
-                            <div class="guide-item-content">
-                                <h4>添加事件接收消息</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/13-添加事件接收消息.png" alt="步骤13">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.14</div>
-                            <div class="guide-item-content">
-                                <h4>再次创建版本</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/14-再次创建版本.png" alt="步骤14">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.15</div>
-                            <div class="guide-item-content">
-                                <h4>随意填写版本号(如2.0.0)和说明后滚动到页面底部保存发布版本</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/15-随意填写个版本号2.0.0和说明后滚动到页面底部保存发布版本.png" alt="步骤15">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.16</div>
-                            <div class="guide-item-content">
-                                <h4>来到飞书消息打开开发者小助手，打开应用开始聊天使用</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/16-来到飞书消息打开开发者小助手打开应用开始聊天使用.png" alt="步骤16">
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -1310,6 +1247,97 @@
                 <div class="step">
                     <span class="step-num">3</span>
                     <span class="step-text">等待脚本提示，输入刚才获取的 <strong>App ID</strong> 和 <strong>App Secret</strong></span>
+                </div>
+
+                <!-- Step 4: Qwen Auth -->
+                <div class="step step-feishu">
+                    <span class="step-num">4</span>
+                    <span class="step-text">
+                        脚本会自动打开浏览器，登录或注册千问账号并授权
+                        <button class="expand-guide-btn" onclick="toggleQwenGuide('mac')">查看授权示例 ▼</button>
+                    </span>
+                </div>
+
+                <div class="feishu-guide hidden" id="qwen-guide-mac">
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <div class="guide-item-num">4.1</div>
+                            <div class="guide-item-content">
+                                <h4>脚本安装过程中自动打开浏览器，直接登录或注册千问账号</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/10-安装时自动打开浏览器提示直接登录或注册千问账号.png" alt="步骤10">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">4.2</div>
+                            <div class="guide-item-content">
+                                <h4>直接登录或注册后确认授权</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/11-直接登录或注册后确认授权.png" alt="步骤11">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Feishu Post Config -->
+                <div class="step step-feishu">
+                    <span class="step-num">5</span>
+                    <span class="step-text">
+                        脚本安装完成后，回到飞书开放平台完成后续配置
+                        <button class="expand-guide-btn" onclick="togglePostGuide('mac')">查看配置指南 ▼</button>
+                    </span>
+                </div>
+
+                <div class="feishu-guide hidden" id="post-guide-mac">
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.1</div>
+                            <div class="guide-item-content">
+                                <h4>回到飞书开放平台，打开事件配置长连接</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/12-打开事件配置长连接.png" alt="步骤12">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.2</div>
+                            <div class="guide-item-content">
+                                <h4>添加事件接收消息</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/13-添加事件接收消息.png" alt="步骤13">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.3</div>
+                            <div class="guide-item-content">
+                                <h4>再次创建版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/14-再次创建版本.png" alt="步骤14">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.4</div>
+                            <div class="guide-item-content">
+                                <h4>随意填写版本号(如2.0.0)和说明后滚动到页面底部保存发布版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/15-随意填写个版本号2.0.0和说明后滚动到页面底部保存发布版本.png" alt="步骤15">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.5</div>
+                            <div class="guide-item-content">
+                                <h4>来到飞书消息打开开发者小助手，打开应用开始聊天使用</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/16-来到飞书消息打开开发者小助手打开应用开始聊天使用.png" alt="步骤16">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1455,69 +1483,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.10</div>
-                            <div class="guide-item-content">
-                                <h4>脚本安装过程中自动打开浏览器，直接登录或注册千问账号</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/10-安装时自动打开浏览器提示直接登录或注册千问账号.png" alt="步骤10">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.11</div>
-                            <div class="guide-item-content">
-                                <h4>直接登录或注册后确认授权</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/11-直接登录或注册后确认授权.png" alt="步骤11">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.12</div>
-                            <div class="guide-item-content">
-                                <h4>【脚本安装完成后】回到飞书开放平台，打开事件配置长连接</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/12-打开事件配置长连接.png" alt="步骤12">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.13</div>
-                            <div class="guide-item-content">
-                                <h4>添加事件接收消息</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/13-添加事件接收消息.png" alt="步骤13">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.14</div>
-                            <div class="guide-item-content">
-                                <h4>再次创建版本</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/14-再次创建版本.png" alt="步骤14">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.15</div>
-                            <div class="guide-item-content">
-                                <h4>随意填写版本号(如2.0.0)和说明后滚动到页面底部保存发布版本</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/15-随意填写个版本号2.0.0和说明后滚动到页面底部保存发布版本.png" alt="步骤15">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="guide-item">
-                            <div class="guide-item-num">1.16</div>
-                            <div class="guide-item-content">
-                                <h4>来到飞书消息打开开发者小助手，打开应用开始聊天使用</h4>
-                                <div class="guide-image-slot">
-                                    <img src="static/16-来到飞书消息打开开发者小助手打开应用开始聊天使用.png" alt="步骤16">
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -1538,6 +1503,97 @@
                 <div class="step">
                     <span class="step-num">3</span>
                     <span class="step-text">等待脚本提示，输入刚才获取的 <strong>App ID</strong> 和 <strong>App Secret</strong></span>
+                </div>
+
+                <!-- Step 4: Qwen Auth -->
+                <div class="step step-feishu">
+                    <span class="step-num">4</span>
+                    <span class="step-text">
+                        脚本会自动打开浏览器，登录或注册千问账号并授权
+                        <button class="expand-guide-btn" onclick="toggleQwenGuide('win')">查看授权示例 ▼</button>
+                    </span>
+                </div>
+
+                <div class="feishu-guide hidden" id="qwen-guide-win">
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <div class="guide-item-num">4.1</div>
+                            <div class="guide-item-content">
+                                <h4>脚本安装过程中自动打开浏览器，直接登录或注册千问账号</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/10-安装时自动打开浏览器提示直接登录或注册千问账号.png" alt="步骤10">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">4.2</div>
+                            <div class="guide-item-content">
+                                <h4>直接登录或注册后确认授权</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/11-直接登录或注册后确认授权.png" alt="步骤11">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Feishu Post Config -->
+                <div class="step step-feishu">
+                    <span class="step-num">5</span>
+                    <span class="step-text">
+                        脚本安装完成后，回到飞书开放平台完成后续配置
+                        <button class="expand-guide-btn" onclick="togglePostGuide('win')">查看配置指南 ▼</button>
+                    </span>
+                </div>
+
+                <div class="feishu-guide hidden" id="post-guide-win">
+                    <div class="guide-grid">
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.1</div>
+                            <div class="guide-item-content">
+                                <h4>回到飞书开放平台，打开事件配置长连接</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/12-打开事件配置长连接.png" alt="步骤12">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.2</div>
+                            <div class="guide-item-content">
+                                <h4>添加事件接收消息</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/13-添加事件接收消息.png" alt="步骤13">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.3</div>
+                            <div class="guide-item-content">
+                                <h4>再次创建版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/14-再次创建版本.png" alt="步骤14">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.4</div>
+                            <div class="guide-item-content">
+                                <h4>随意填写版本号(如2.0.0)和说明后滚动到页面底部保存发布版本</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/15-随意填写个版本号2.0.0和说明后滚动到页面底部保存发布版本.png" alt="步骤15">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="guide-item">
+                            <div class="guide-item-num">5.5</div>
+                            <div class="guide-item-content">
+                                <h4>来到飞书消息打开开发者小助手，打开应用开始聊天使用</h4>
+                                <div class="guide-image-slot">
+                                    <img src="static/16-来到飞书消息打开开发者小助手打开应用开始聊天使用.png" alt="步骤16">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1651,14 +1707,46 @@
         // Toggle Feishu Guide
         function toggleFeishuGuide(os) {
             const guide = document.getElementById(`feishu-guide-${os}`);
-            const btn = document.querySelector(`#${os}-card .expand-guide-btn`);
+            const cardId = os === 'mac' ? 'mac-card' : 'windows-card';
+            const card = document.getElementById(cardId);
+            const btn = card.querySelector('.step:first-of-type .expand-guide-btn');
 
             if (guide.classList.contains('hidden')) {
                 guide.classList.remove('hidden');
-                btn.textContent = '收起配置指南 ▲';
+                if (btn) btn.textContent = '收起配置指南 ▲';
             } else {
                 guide.classList.add('hidden');
-                btn.textContent = '查看配置指南 ▼';
+                if (btn) btn.textContent = '查看配置指南 ▼';
+            }
+        }
+
+        // Toggle Qwen Auth Guide
+        function toggleQwenGuide(os) {
+            const guide = document.getElementById(`qwen-guide-${os}`);
+            // Find button by traversing from guide
+            const btn = guide.previousElementSibling.querySelector('.expand-guide-btn');
+
+            if (guide.classList.contains('hidden')) {
+                guide.classList.remove('hidden');
+                if (btn) btn.textContent = '收起授权示例 ▲';
+            } else {
+                guide.classList.add('hidden');
+                if (btn) btn.textContent = '查看授权示例 ▼';
+            }
+        }
+
+        // Toggle Post Config Guide
+        function togglePostGuide(os) {
+            const guide = document.getElementById(`post-guide-${os}`);
+            // Find button by traversing from guide
+            const btn = guide.previousElementSibling.querySelector('.expand-guide-btn');
+
+            if (guide.classList.contains('hidden')) {
+                guide.classList.remove('hidden');
+                if (btn) btn.textContent = '收起配置指南 ▲';
+            } else {
+                guide.classList.add('hidden');
+                if (btn) btn.textContent = '查看配置指南 ▼';
             }
         }
 

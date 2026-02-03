@@ -1114,9 +1114,9 @@ Write-Host "  ║    openclaw dashboard       - 打开控制台 (浏览器)     
 Write-Host "  ║    openclaw gateway restart - 重启服务                ║" -ForegroundColor Green
 Write-Host "  ║    openclaw gateway stop    - 停止服务                ║" -ForegroundColor Green
 Write-Host "  ║                                                       ║" -ForegroundColor Green
+Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
+Write-Host "  ║  如果觉得好用，请一键三连金牌小密探并转发，感谢！🙏   ║" -ForegroundColor Green
 Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
-Write-Host ""
-Write-Host "如果觉得这个工具好用，请一键三连金牌小密探，并转发给需要的人，感谢！🙏" -ForegroundColor Yellow
 Write-Host ""
 
 # 自动打开 Dashboard（带 token 认证）
