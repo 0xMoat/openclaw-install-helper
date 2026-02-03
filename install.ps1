@@ -654,45 +654,28 @@ if (Test-Command "openclaw") {
 }
 
 if ($needInstall) {
-    # 3. 清理旧安装
-    $openclawDir = "$env:APPDATA\npm\node_modules\openclaw"
-    if (Test-Path $openclawDir) {
-        Write-Host "  清理旧安装文件..." -ForegroundColor Gray
-        Remove-Item -Recurse -Force $openclawDir -ErrorAction SilentlyContinue
-    }
-    # 清理 shim
-    @("openclaw", "openclaw.cmd", "openclaw.ps1") | ForEach-Object {
-        $shimPath = "$env:APPDATA\npm\$_"
-        if (Test-Path $shimPath) { Remove-Item -Force $shimPath -ErrorAction SilentlyContinue }
-    }
-
-    # 4. 下载 OpenClaw
-    $OpenclawTmp = "$env:TEMP\openclaw.tgz"
-    Write-Host "  正在下载 OpenClaw (Gitee)..." -ForegroundColor Gray
-    try {
-        $webClient = New-Object System.Net.WebClient
-        $webClient.DownloadFile($OpenclawUrl, $OpenclawTmp)
-    } catch {
-        Write-Err "OpenClaw 下载失败: $_"
-        exit 1
-    }
-
-    # 5. 安装 OpenClaw (跳过脚本)
-    Write-Host "  正在安装 OpenClaw核心 (跳过编译)..." -ForegroundColor Gray
-    
     # 临时配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
     # 保存原配置以便恢复
-    $gitSshConfig1 = git config --global --get url."https://github.com/".insteadOf 2>$null
-    $gitSshConfig2 = git config --global --get-all url."https://github.com/".insteadOf 2>$null
+    $gitSshConfig = git config --global --get url."https://github.com/".insteadOf 2>$null
     $hadConfig = $LASTEXITCODE -eq 0
     
     git config --global url."https://github.com/".insteadOf "git@github.com:"
     git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
     
+    Write-Host "  正在安装 OpenClaw (从 Gitee 下载)..." -ForegroundColor Gray
     $ErrorActionPreference = "Continue"
-    cmd /c "npm install -g `"$OpenclawTmp`" --registry=https://registry.npmmirror.com --ignore-scripts --progress --loglevel=notice"
+    
+    # 直接从 URL 安装（和 bash 脚本一致）
+    cmd /c "npm install -g `"$OpenclawUrl`" --ignore-scripts --progress --loglevel=notice" 2>&1
+    $installResult = $LASTEXITCODE
+    
+    # 如果 Gitee 下载失败，尝试 npm registry
+    if ($installResult -ne 0) {
+        Write-Warning "从 Gitee 下载失败，尝试 npm registry..."
+        cmd /c "npm install -g openclaw --ignore-scripts --progress --loglevel=notice" 2>&1
+    }
+    
     $ErrorActionPreference = "Stop"
-    Remove-Item -Path $OpenclawTmp -Force -ErrorAction SilentlyContinue
     
     # 恢复 git 配置
     if (-not $hadConfig) {
@@ -701,37 +684,8 @@ if ($needInstall) {
 
     Refresh-Path
     
-    # 6. 后处理：移除 node-llama-cpp 和修复 native 模块
-    if (Test-Path $openclawDir) {
-        # 6.1 移除 node-llama-cpp (不需要本地 LLM)
-        $nodeLlamaCppDir = "$openclawDir\node_modules\node-llama-cpp"
-        if (Test-Path $nodeLlamaCppDir) {
-            Write-Host "  清理无用模块 (node-llama-cpp)..." -ForegroundColor Gray
-            Remove-Item -Recurse -Force $nodeLlamaCppDir -ErrorAction SilentlyContinue
-        }
-
-        # 6.2 手动安装 clipboard 模块 (native)
-        Write-Host "  安装剪贴板支持 ($arch native)..." -ForegroundColor Gray
-        $ClipboardTmp = "$env:TEMP\clipboard.tgz"
-        try {
-            $webClient.DownloadFile($ClipboardUrl, $ClipboardTmp)
-            
-            # 安装到 openclaw 的 node_modules
-            if (Test-Path $ClipboardTmp) {
-                Push-Location $openclawDir
-                $ErrorActionPreference = "Continue"
-                # --no-save 避免修改 package.json, --ignore-scripts 避免触发 postinstall
-                # 但这会把包解压并替换现有的 @mariozechner/clipboard
-                cmd /c "npm install `"$ClipboardTmp`" --no-save --ignore-scripts"
-                $ErrorActionPreference = "Stop"
-                Pop-Location
-                Remove-Item -Path $ClipboardTmp -Force -ErrorAction SilentlyContinue
-                Write-Success "剪贴板模块安装完成"
-            }
-        } catch {
-            Write-Warning "剪贴板模块安装失败: $_ (可能影响剪贴板功能)"
-        }
-    } else {
+    $openclawDir = "$env:APPDATA\npm\node_modules\openclaw"
+    if (-not (Test-Path $openclawDir)) {
         Write-Err "OpenClaw 目录未创建，安装可能失败"
         exit 1
     }
