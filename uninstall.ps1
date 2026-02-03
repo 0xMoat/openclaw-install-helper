@@ -86,7 +86,8 @@ $pathsToDelete = @(
     "$env:OPENCLAW_STATE_DIR",
     "$env:USERPROFILE\.claude\skills\anthropics",
     "$env:LOCALAPPDATA\openclaw",
-    "$env:APPDATA\openclaw"
+    "$env:APPDATA\openclaw",
+    "$env:USERPROFILE\.moltbot"  # Skills CLI 创建的目录
 )
 
 foreach ($path in $pathsToDelete) {

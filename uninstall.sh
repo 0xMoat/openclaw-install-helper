@@ -91,6 +91,9 @@ rm -rf ~/.claude/skills/anthropics 2>/dev/null || true
 rm -rf ~/.cache/openclaw 2>/dev/null || true
 rm -rf ~/Library/Caches/openclaw 2>/dev/null || true
 
+# Skills CLI 创建的目录
+rm -rf ~/.moltbot 2>/dev/null || true
+
 # npm/pnpm 全局安装残留
 rm -rf ~/.npm/_npx/*openclaw* 2>/dev/null || true
 rm -rf ~/.pnpm-store/*openclaw* 2>/dev/null || true
