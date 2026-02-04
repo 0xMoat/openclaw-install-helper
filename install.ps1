@@ -663,7 +663,7 @@ if ($needInstall) {
     $ErrorActionPreference = "Stop"
     
     # 恢复 git 配置（清除镜像配置）
-    Remove-GitMirror
+    # Remove-GitMirror (Moved to end of script)
 
     Refresh-Path
     
@@ -1082,6 +1082,7 @@ Write-Success "Qwen 认证完成"
 # 恢复 npm 源设置
 # ============================================================
 Restore-NpmRegistry
+Remove-GitMirror
 
 # ============================================================
 # 完成
