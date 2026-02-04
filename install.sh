@@ -326,13 +326,13 @@ if command_exists openclaw; then
     else
         print_warning "OpenClaw 版本不匹配或无法读取，尝试重新安装..."
         # 直接从 npm 官方安装
-        npm install -g openclaw --ignore-scripts --progress --loglevel=notice
+        npm install -g openclaw@$VER_OPENCLAW --ignore-scripts --progress --loglevel=notice
     fi
 else
     echo "正在安装 OpenClaw..."
 
     # 直接从 npm 官方安装
-    npm install -g openclaw --ignore-scripts --progress --loglevel=notice
+    npm install -g openclaw@$VER_OPENCLAW --ignore-scripts --progress --loglevel=notice
 
     refresh_path
 

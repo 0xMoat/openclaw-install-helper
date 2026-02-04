@@ -657,7 +657,7 @@ if ($needInstall) {
     $ErrorActionPreference = "Continue"
     
     # 直接从 npm 官方安装
-    cmd /c "npm install -g openclaw --ignore-scripts --progress --loglevel=error" 2>&1
+    cmd /c "npm install -g openclaw@$verOpenClaw --ignore-scripts --progress --loglevel=error" 2>&1
     $installResult = $LASTEXITCODE
     
     $ErrorActionPreference = "Stop"
