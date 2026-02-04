@@ -623,7 +623,7 @@ if (Test-Command "openclaw") {
         $null = cmd /c "openclaw --version" 2>&1
         if ($LASTEXITCODE -eq 0) {
             # 检查版本匹配
-            $currentVer = openclaw --version
+            $currentVer = cmd /c "openclaw --version"
             if ($currentVer -like "*$verOpenClaw*") {
                 $needInstall = $false
                 Write-Success "OpenClaw 已安装且版本匹配 ($verOpenClaw)"
