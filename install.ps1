@@ -897,11 +897,10 @@ Write-Step "初始化 OpenClaw..."
 # 强制停止所有残留的 openclaw 进程，避免端口冲突导致 gateway closed
 Get-Process node, openclaw -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*openclaw*" } | Stop-Process -Force -ErrorAction SilentlyContinue
 
-try {
-    cmd /c "openclaw onboard --non-interactive --accept-risk --skip-daemon" 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
-} catch {
-    Write-Warning "初始化遇到轻微错误，尝试继续..."
-}
+    # 初始化 (即使失败也通常不影响后续，可能是因为已初始化)
+    $ErrorActionPreference = "Continue"
+    $null = cmd /c "openclaw onboard --non-interactive --accept-risk --skip-daemon" 2>&1
+    $ErrorActionPreference = "Stop"
 
 Write-Step "安装网关服务..."
 try {
