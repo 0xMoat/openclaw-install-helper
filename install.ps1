@@ -1009,41 +1009,36 @@ if ($env:Path -notlike "*$npmPath*") {
 
 # 尝试安装飞书插件
 # 尝试安装飞书插件
-$feishuInstallResult = cmd /c "openclaw plugins install @m1heng-clawd/feishu@0.1.7 2>&1"
-if ($LASTEXITCODE -eq 0) {
-    Write-Success "飞书插件安装完成"
-} else {
-    Write-Warning "OpenClaw CLI 在线安装失败，尝试方案 B (离线包)..."
+    # 方案 B (直接使用离线包): 下载 tgz 包本地安装
+    # 相比在线安装，这种方式更稳定，不容易受网络波动影响
     $installSuccess = $false
     
-    # 方案 B: 下载离线包安装
-    # 使用 npmmirror 以获得最佳速度，版本锁定 0.1.7
     $tgzUrl = "https://registry.npmmirror.com/@m1heng-clawd/feishu/-/feishu-0.1.7.tgz"
     $tgzPath = "$env:TEMP\feishu-0.1.7.tgz"
     
     try {
-        Write-Host "  正在下载插件包..." -ForegroundColor Gray
+        Write-Host "  正在下载插件包 (0.1.7)..." -ForegroundColor Gray
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $tgzUrl -OutFile $tgzPath -UseBasicParsing
         
         if (Test-Path $tgzPath) {
             Write-Host "  正在从本地文件安装..." -ForegroundColor Gray
-            $localInstallResult = cmd /c "openclaw plugins install `"$tgzPath`" 2>&1"
+            $localRes = cmd /c "openclaw plugins install `"$tgzPath`" 2>&1"
             
             if ($LASTEXITCODE -eq 0) {
                 Write-Success "飞书插件安装完成 (离线包)"
                 $installSuccess = $true
             } else {
-                 Write-Host "  离线包安装返回错误: $localInstallResult" -ForegroundColor DarkGray
+                 Write-Host "  离线包安装返回非零状态，尝试后续步骤..." -ForegroundColor DarkGray
             }
         }
     } catch {
-        Write-Host "  下载失败: $_" -ForegroundColor DarkGray
+        Write-Host "  下载插件包遇到了点问题 ($_), 尝试手动安装..." -ForegroundColor DarkGray
     }
 
     # 方案 C: 手动定位目录 npm install (如果方案 B 失败)
     if (-not $installSuccess) {
-        Write-Warning "方案 B 失败，尝试方案 C (手动解压)..."
+        Write-Warning "离线包安装未成功，尝试方案 C (手动解压)..."
         $npmPrefix = cmd /c "npm config get prefix" 2>$null
         if ($npmPrefix) {
             $npmPrefix = $npmPrefix.Trim()
@@ -1057,7 +1052,7 @@ if ($LASTEXITCODE -eq 0) {
                      if ($LASTEXITCODE -eq 0) {
                          Write-Success "飞书插件手动安装成功"
                      } else {
-                          Write-Warning "全部尝试失败。请进入 $openclawPath 手动尝试安装。"
+                          Write-Warning "插件安装最终失败。请尝试命令: openclaw plugins install ./feishu-0.1.7.tgz"
                      }
                  } finally {
                      Pop-Location
@@ -1067,7 +1062,6 @@ if ($LASTEXITCODE -eq 0) {
             }
         }
     }
-}
 
 # 配置飞书凭证
 if ($feishuAppId -and $feishuAppSecret) {
