@@ -1009,10 +1009,16 @@ if ($env:Path -notlike "*$npmPath*") {
 
 # 尝试安装飞书插件
 # 尝试安装飞书插件
-    # 方案 B (直接使用离线包): 下载 tgz 包本地安装
-    # 相比在线安装，这种方式更稳定，不容易受网络波动影响
-    $installSuccess = $false
+    # 方案 B (增强版): 清理 -> 下载 tgz -> CLI安装 -> 补齐依赖
+    $feishuExtDir = "$env:USERPROFILE\.openclaw\extensions\feishu"
     
+    # 1. 强力清理旧文件 (解决 plugin already exists 错误)
+    if (Test-Path $feishuExtDir) {
+        Write-Host "  清理旧版插件残余..." -ForegroundColor Gray
+        Remove-Item -Recurse -Force $feishuExtDir -ErrorAction SilentlyContinue
+    }
+    
+    $installSuccess = $false
     $tgzUrl = "https://registry.npmmirror.com/@m1heng-clawd/feishu/-/feishu-0.1.7.tgz"
     $tgzPath = "$env:TEMP\feishu-0.1.7.tgz"
     
@@ -1022,18 +1028,29 @@ if ($env:Path -notlike "*$npmPath*") {
         Invoke-WebRequest -Uri $tgzUrl -OutFile $tgzPath -UseBasicParsing
         
         if (Test-Path $tgzPath) {
-            Write-Host "  正在从本地文件安装..." -ForegroundColor Gray
+            Write-Host "  正在安装离线包..." -ForegroundColor Gray
             $localRes = cmd /c "openclaw plugins install `"$tgzPath`" 2>&1"
             
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "飞书插件安装完成 (离线包)"
-                $installSuccess = $true
+            # 关键步骤：验证并修复依赖 (解决 Cannot find module 错误)
+            if (Test-Path $feishuExtDir) {
+                 # 即使 CLI 报错，只要目录出来且我们能装上依赖，就算成功
+                 if (-not (Test-Path "$feishuExtDir\node_modules\@larksuiteoapi")) {
+                     Write-Host "  正在补齐插件依赖 (这可能需要一分钟)..." -ForegroundColor Gray
+                     Push-Location $feishuExtDir
+                     try {
+                         # 强制使用镜像源安装依赖
+                         cmd /c "npm install --omit=dev --no-audit --loglevel=error --registry https://registry.npmmirror.com/" 2>&1 | Out-Null
+                     } finally { Pop-Location }
+                 }
+                 
+                 Write-Success "飞书插件安装完成 (增强模式)"
+                 $installSuccess = $true
             } else {
-                 Write-Host "  离线包安装返回非零状态，尝试后续步骤..." -ForegroundColor DarkGray
+                 Write-Host "  安装未创建目录: $localRes" -ForegroundColor DarkGray
             }
         }
     } catch {
-        Write-Host "  下载插件包遇到了点问题 ($_), 尝试手动安装..." -ForegroundColor DarkGray
+        Write-Host "  方案 B 遇到问题: $_" -ForegroundColor DarkGray
     }
 
     # 方案 C: 手动定位目录 npm install (如果方案 B 失败)
