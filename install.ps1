@@ -100,7 +100,14 @@ function Restore-NpmRegistry {
 # 辅助函数
 # ============================================================
 
-function Write-Step { param($msg) Write-Host "`n[步骤] $msg" -ForegroundColor Cyan }
+$script:totalSteps = 16
+$script:currentStep = 0
+
+function Write-Step {
+    param($msg)
+    $script:currentStep++
+    Write-Host "`n[步骤 $script:currentStep/$script:totalSteps] $msg" -ForegroundColor Cyan
+}
 function Write-Success { param($msg) Write-Host "[成功] $msg" -ForegroundColor Green }
 function Write-Warning { param($msg) Write-Host "[警告] $msg" -ForegroundColor Yellow }
 function Write-Err { param($msg) Write-Host "[错误] $msg" -ForegroundColor Red }
