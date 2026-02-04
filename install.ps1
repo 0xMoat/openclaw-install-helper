@@ -1013,30 +1013,58 @@ $feishuInstallResult = cmd /c "openclaw plugins install @m1heng-clawd/feishu@0.1
 if ($LASTEXITCODE -eq 0) {
     Write-Success "飞书插件安装完成"
 } else {
-    Write-Warning "OpenClaw CLI 安装插件失败 ($feishuInstallResult)，尝试手动安装模式..."
+    Write-Warning "OpenClaw CLI 在线安装失败，尝试方案 B (离线包)..."
+    $installSuccess = $false
     
-    # 获取 npm 全局安装路径
-    $npmPrefix = cmd /c "npm config get prefix" 2>$null
-    if ($npmPrefix) {
-        $npmPrefix = $npmPrefix.Trim()
-        $openclawPath = Join-Path $npmPrefix "node_modules\openclaw"
+    # 方案 B: 下载离线包安装
+    # 使用 npmmirror 以获得最佳速度，版本锁定 0.1.7
+    $tgzUrl = "https://registry.npmmirror.com/@m1heng-clawd/feishu/-/feishu-0.1.7.tgz"
+    $tgzPath = "$env:TEMP\feishu-0.1.7.tgz"
+    
+    try {
+        Write-Host "  正在下载插件包..." -ForegroundColor Gray
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $tgzUrl -OutFile $tgzPath -UseBasicParsing
         
-        if (Test-Path $openclawPath) {
-             Write-Host "  定位到 OpenClaw 目录: $openclawPath" -ForegroundColor Gray
-             Push-Location $openclawPath
-             try {
-                 $manualResult = cmd /c "npm install @m1heng-clawd/feishu@0.1.7 --save --ignore-scripts --loglevel=error 2>&1"
-                 if ($LASTEXITCODE -eq 0) {
-                     Write-Success "飞书插件手动安装成功"
-                 } else {
-                      Write-Warning "手动安装也失败了: $manualResult"
-                      Write-Warning "请稍后尝试: cd `"$openclawPath`"; npm install @m1heng-clawd/feishu@0.1.7"
+        if (Test-Path $tgzPath) {
+            Write-Host "  正在从本地文件安装..." -ForegroundColor Gray
+            $localInstallResult = cmd /c "openclaw plugins install `"$tgzPath`" 2>&1"
+            
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "飞书插件安装完成 (离线包)"
+                $installSuccess = $true
+            } else {
+                 Write-Host "  离线包安装返回错误: $localInstallResult" -ForegroundColor DarkGray
+            }
+        }
+    } catch {
+        Write-Host "  下载失败: $_" -ForegroundColor DarkGray
+    }
+
+    # 方案 C: 手动定位目录 npm install (如果方案 B 失败)
+    if (-not $installSuccess) {
+        Write-Warning "方案 B 失败，尝试方案 C (手动解压)..."
+        $npmPrefix = cmd /c "npm config get prefix" 2>$null
+        if ($npmPrefix) {
+            $npmPrefix = $npmPrefix.Trim()
+            $openclawPath = Join-Path $npmPrefix "node_modules\openclaw"
+            
+            if (Test-Path $openclawPath) {
+                 Write-Host "  定位到 OpenClaw 目录: $openclawPath" -ForegroundColor Gray
+                 Push-Location $openclawPath
+                 try {
+                     $manualResult = cmd /c "npm install @m1heng-clawd/feishu@0.1.7 --save --ignore-scripts --loglevel=error 2>&1"
+                     if ($LASTEXITCODE -eq 0) {
+                         Write-Success "飞书插件手动安装成功"
+                     } else {
+                          Write-Warning "全部尝试失败。请进入 $openclawPath 手动尝试安装。"
+                     }
+                 } finally {
+                     Pop-Location
                  }
-             } finally {
-                 Pop-Location
-             }
-        } else {
-             Write-Warning "无法定位 OpenClaw 目录，请手动安装: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
+            } else {
+                 Write-Warning "无法定位 OpenClaw 目录。"
+            }
         }
     }
 }
