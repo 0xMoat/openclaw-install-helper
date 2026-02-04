@@ -940,7 +940,7 @@ Set WshShell = CreateObject("WScript.Shell")
 ' 0 = Hide Window, False = Do not wait for completion
 WshShell.Run "openclaw gateway start", 0, False
 "@
-Set-Content -Path $daemonScript -Value $vbsContent -Encoding UTF8
+Set-Content -Path $daemonScript -Value $vbsContent -Encoding ASCII
 
 Write-Step "启动网关服务 (后台静默)..."
 try {
