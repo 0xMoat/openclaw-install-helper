@@ -742,7 +742,7 @@ Write-Host @"
 Write-Host "已安装版本:" -ForegroundColor Cyan
 Write-Host "  Git:      $(git --version)"
 Write-Host "  Node.js:  $(node --version)"
-$openclawVer = (openclaw --version 2>$null)
+$openclawVer = (cmd /c "openclaw --version" 2>$null)
 Write-Host "  OpenClaw: $(if ($openclawVer) { $openclawVer } else { '已安装' })"
 
 # ============================================================
@@ -1102,4 +1102,4 @@ Write-Host ""
 
 # 自动打开 Dashboard（带 token 认证）
 Write-Step "正在打开 Dashboard..."
-try { openclaw dashboard 2>$null } catch {}
+try { cmd /c "openclaw dashboard" 2>$null } catch {}
