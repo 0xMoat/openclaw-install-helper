@@ -1012,11 +1012,21 @@ if ([Environment]::UserInteractive) {
 
 # 安装飞书插件（无论是否输入凭证都需要安装）
 Write-Step "安装飞书插件..."
-try {
-    cmd /c "openclaw plugins install @m1heng-clawd/feishu@0.1.7" 2>$null
+
+# 设置环境变量帮助 openclaw 找到 npm（解决 spawn npm ENOENT 问题）
+$env:npm_config_prefix = "$env:APPDATA\npm"
+$npmPath = "$env:APPDATA\npm"
+if ($env:Path -notlike "*$npmPath*") {
+    $env:Path = "$npmPath;$env:Path"
+}
+
+# 尝试安装飞书插件
+$feishuInstallResult = cmd /c "openclaw plugins install @m1heng-clawd/feishu@0.1.7 2>&1"
+if ($LASTEXITCODE -eq 0) {
     Write-Success "飞书插件安装完成"
-} catch {
-    Write-Warning "飞书插件安装失败，请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
+} else {
+    Write-Warning "飞书插件安装失败: $feishuInstallResult"
+    Write-Warning "请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
 }
 
 # 配置飞书凭证
