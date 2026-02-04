@@ -17,7 +17,13 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
-print_step() { echo -e "\n${CYAN}[步骤]${NC} $1"; }
+TOTAL_STEPS=15
+CURRENT_STEP=0
+
+print_step() {
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo -e "\n${CYAN}[步骤 $CURRENT_STEP/$TOTAL_STEPS]${NC} $1"
+}
 print_success() { echo -e "${GREEN}[成功]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[警告]${NC} $1"; }
 print_error() { echo -e "${RED}[错误]${NC} $1"; }
