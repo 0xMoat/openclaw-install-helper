@@ -1064,21 +1064,21 @@ Restore-NpmRegistry
 Write-Host ""
 Write-Host "────────────────────────────────────────────────────" -ForegroundColor Cyan
 Write-Host ""
-Write-Host ""
-Write-Host "  ╔═══════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "  ║                     配置完成!                         ║" -ForegroundColor Green
-Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
-Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ║  已连接您的飞书机器人，请在飞书中开始使用！           ║" -ForegroundColor Green
-Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ║  常用命令:                                            ║" -ForegroundColor Green
-Write-Host "  ║    openclaw dashboard       - 打开控制台 (浏览器)     ║" -ForegroundColor Green
-Write-Host "  ║    openclaw gateway restart - 重启服务                ║" -ForegroundColor Green
-Write-Host "  ║    openclaw gateway stop    - 停止服务                ║" -ForegroundColor Green
-Write-Host "  ║                                                       ║" -ForegroundColor Green
-Write-Host "  ╠═══════════════════════════════════════════════════════╣" -ForegroundColor Green
-Write-Host "  ║  如果觉得好用，请一键三连金牌小密探并转发，感谢！🙏   ║" -ForegroundColor Green
-Write-Host "  ╚═══════════════════════════════════════════════════════╝" -ForegroundColor Green
+Write-Host "  ╔════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+Write-Host "  ║                             配置完成!                                  ║" -ForegroundColor Green
+Write-Host "  ╠════════════════════════════════════════════════════════════════════════╣" -ForegroundColor Green
+Write-Host "  ║                                                                        ║" -ForegroundColor Green
+Write-Host "  ║  请参考以下网址中的步骤5完成最后配置即可在飞书聊天中使用！             ║" -ForegroundColor Green
+Write-Host "  ║  https://0xmoat.github.io/openclaw-install-helper/                     ║" -ForegroundColor Green
+Write-Host "  ║                                                                        ║" -ForegroundColor Green
+Write-Host "  ║  常用命令:                                                             ║" -ForegroundColor Green
+Write-Host "  ║    openclaw dashboard       - 打开控制台 (浏览器)                      ║" -ForegroundColor Green
+Write-Host "  ║    openclaw gateway restart - 重启服务                                 ║" -ForegroundColor Green
+Write-Host "  ║    openclaw gateway stop    - 停止服务                                 ║" -ForegroundColor Green
+Write-Host "  ║                                                                        ║" -ForegroundColor Green
+Write-Host "  ╠════════════════════════════════════════════════════════════════════════╣" -ForegroundColor Green
+Write-Host "  ║  如果觉得好用，请一键三连金牌小密探并转发，感谢！🙏                    ║" -ForegroundColor Green
+Write-Host "  ╚════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
 
 # 自动打开 Dashboard（带 token 认证）
