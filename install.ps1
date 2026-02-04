@@ -670,13 +670,13 @@ if ($needInstall) {
     $ErrorActionPreference = "Continue"
     
     # 直接从 URL 安装（和 bash 脚本一致）
-    cmd /c "npm install -g `"$OpenclawUrl`" --ignore-scripts --progress --loglevel=notice" 2>&1
+    cmd /c "npm install -g `"$OpenclawUrl`" --ignore-scripts --progress --loglevel=error" 2>&1
     $installResult = $LASTEXITCODE
     
     # 如果 Gitee 下载失败，尝试 npm registry
     if ($installResult -ne 0) {
         Write-Warning "从 Gitee 下载失败，尝试 npm registry..."
-        cmd /c "npm install -g openclaw --ignore-scripts --progress --loglevel=notice" 2>&1
+        cmd /c "npm install -g openclaw --ignore-scripts --progress --loglevel=error" 2>&1
     }
     
     $ErrorActionPreference = "Stop"
