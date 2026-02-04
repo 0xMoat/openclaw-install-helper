@@ -27,7 +27,7 @@ $verOpenClaw = "2026.1.30"
 $verFeishu = "0.1.6"
 $verSkills = "1.3.1"
 $verClipboard = "0.3.2"
-$verTag = "1.0.1" # Gitee Release Tag
+$verTag = "1.0.1" # Version Tag
 
 # ============================================================
 # NPM 镜像源测速与选择（并发测试）
@@ -545,7 +545,7 @@ Select-BestNpmRegistry
 # 步骤 4: 安装 OpenClaw
 # ============================================================
 # ============================================================
-# 步骤 4: 安装 OpenClaw (Gitee 稳定版)
+# 步骤 4: 安装 OpenClaw
 # ============================================================
 Write-Step "检查 OpenClaw..."
 
@@ -637,7 +637,7 @@ if (Test-Command "openclaw") {
         Write-Warning "检测到 OpenClaw 安装损坏，准备重新安装..."
     }
 } else {
-    Write-Host "正在安装 OpenClaw (从 Gitee 下载)..." -ForegroundColor Yellow
+    Write-Host "正在安装 OpenClaw..." -ForegroundColor Yellow
 }
 
 if ($needInstall) {
