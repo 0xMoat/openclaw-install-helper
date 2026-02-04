@@ -615,19 +615,6 @@ try {
     Write-Host "  跳过环境自动配置 (网络原因)，继续安装..." -ForegroundColor Gray
 }
 
-# 2. Gitee 包链接
-$BaseUrl = "https://gitee.com/mintmind/openclaw-packages/releases/download/$verTag"
-$OpenclawUrl = "$BaseUrl/openclaw-$verOpenClaw.tgz"
-$ClipboardUrl_x64 = "$BaseUrl/mariozechner-clipboard-win32-x64-msvc-$verClipboard.tgz"
-$ClipboardUrl_arm64 = "$BaseUrl/mariozechner-clipboard-win32-arm64-msvc-$verClipboard.tgz"
-
-# 选择对应的 clipboard 包
-if ($arch -eq "arm64") {
-    $ClipboardUrl = $ClipboardUrl_arm64
-} else {
-    $ClipboardUrl = $ClipboardUrl_x64
-}
-
 # 检测是否需要重新安装
 $needInstall = $true
 if (Test-Command "openclaw") {
@@ -666,18 +653,12 @@ if ($needInstall) {
         git config --global --add url."https://github.com/".insteadOf "ssh://git@github.com/"
     }
     
-    Write-Host "  正在安装 OpenClaw (从 Gitee 下载)..." -ForegroundColor Gray
+    Write-Host "  正在安装 OpenClaw..." -ForegroundColor Gray
     $ErrorActionPreference = "Continue"
     
-    # 直接从 URL 安装（和 bash 脚本一致）
-    cmd /c "npm install -g `"$OpenclawUrl`" --ignore-scripts --progress --loglevel=error" 2>&1
+    # 直接从 npm 官方安装
+    cmd /c "npm install -g openclaw --ignore-scripts --progress --loglevel=error" 2>&1
     $installResult = $LASTEXITCODE
-    
-    # 如果 Gitee 下载失败，尝试 npm registry
-    if ($installResult -ne 0) {
-        Write-Warning "从 Gitee 下载失败，尝试 npm registry..."
-        cmd /c "npm install -g openclaw --ignore-scripts --progress --loglevel=error" 2>&1
-    }
     
     $ErrorActionPreference = "Stop"
     

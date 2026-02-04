@@ -304,9 +304,6 @@ select_best_npm_registry
 # ============================================================
 print_step "检查 OpenClaw..."
 
-# Gitee 托管的包 URL（中国境内访问更快）
-OPENCLAW_R2_URL="https://gitee.com/mintmind/openclaw-packages/releases/download/${VER_TAG}/openclaw-${VER_OPENCLAW}.tgz"
-
 # 临时配置 git 使用 HTTPS 代替 SSH (解决依赖包的 SSH 权限问题)
 # 保存原配置以便恢复
 GIT_HAD_SSH_CONFIG=$(git config --global --get-all url."https://github.com/".insteadOf 2>/dev/null)
@@ -328,23 +325,14 @@ if command_exists openclaw; then
         print_success "OpenClaw 已安装且版本匹配 ($current_ver)"
     else
         print_warning "OpenClaw 版本不匹配或无法读取，尝试重新安装..."
-        # 使用 --ignore-scripts 避免 postinstall 脚本失败
-        if npm install -g "$OPENCLAW_R2_URL" --ignore-scripts --progress --loglevel=notice; then
-             echo ""
-        else
-             print_warning "从 Gitee 下载失败，尝试 npm registry..."
-             npm install -g openclaw --ignore-scripts --progress --loglevel=notice
-        fi
-    fi
-else
-    echo "正在安装 OpenClaw（从 Gitee 下载）..."
-
-    if npm install -g "$OPENCLAW_R2_URL" --ignore-scripts --progress --loglevel=notice; then
-        echo ""
-    else
-        print_warning "从 Gitee 下载失败，尝试 npm registry..."
+        # 直接从 npm 官方安装
         npm install -g openclaw --ignore-scripts --progress --loglevel=notice
     fi
+else
+    echo "正在安装 OpenClaw..."
+
+    # 直接从 npm 官方安装
+    npm install -g openclaw --ignore-scripts --progress --loglevel=notice
 
     refresh_path
 
