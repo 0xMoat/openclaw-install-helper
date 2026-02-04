@@ -1002,12 +1002,37 @@ if ($env:Path -notlike "*$npmPath*") {
 }
 
 # 尝试安装飞书插件
+# 尝试安装飞书插件
 $feishuInstallResult = cmd /c "openclaw plugins install @m1heng-clawd/feishu@0.1.7 2>&1"
 if ($LASTEXITCODE -eq 0) {
     Write-Success "飞书插件安装完成"
 } else {
-    Write-Warning "飞书插件安装失败: $feishuInstallResult"
-    Write-Warning "请稍后手动运行: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
+    Write-Warning "OpenClaw CLI 安装插件失败 ($feishuInstallResult)，尝试手动安装模式..."
+    
+    # 获取 npm 全局安装路径
+    $npmPrefix = cmd /c "npm config get prefix" 2>$null
+    if ($npmPrefix) {
+        $npmPrefix = $npmPrefix.Trim()
+        $openclawPath = Join-Path $npmPrefix "node_modules\openclaw"
+        
+        if (Test-Path $openclawPath) {
+             Write-Host "  定位到 OpenClaw 目录: $openclawPath" -ForegroundColor Gray
+             Push-Location $openclawPath
+             try {
+                 $manualResult = cmd /c "npm install @m1heng-clawd/feishu@0.1.7 --save --ignore-scripts --loglevel=error 2>&1"
+                 if ($LASTEXITCODE -eq 0) {
+                     Write-Success "飞书插件手动安装成功"
+                 } else {
+                      Write-Warning "手动安装也失败了: $manualResult"
+                      Write-Warning "请稍后尝试: cd `"$openclawPath`"; npm install @m1heng-clawd/feishu@0.1.7"
+                 }
+             } finally {
+                 Pop-Location
+             }
+        } else {
+             Write-Warning "无法定位 OpenClaw 目录，请手动安装: openclaw plugins install @m1heng-clawd/feishu@0.1.7"
+        }
+    }
 }
 
 # 配置飞书凭证
@@ -1038,7 +1063,7 @@ Write-Step "启动 Qwen 认证..."
 cmd /c "openclaw plugins enable qwen-portal-auth" 2>&1 | Select-String -Pattern "^\s*$" -NotMatch
 
 # 然后进行认证（这个需要用户交互，保持原样）
-openclaw models auth login --provider qwen-portal --set-default
+cmd /c "openclaw models auth login --provider qwen-portal --set-default"
 
 # 复制 auth 配置到主 agent 目录
 $agentAuthPath = "$env:USERPROFILE\.openclaw\agents\main\agent\auth-profiles.json"
